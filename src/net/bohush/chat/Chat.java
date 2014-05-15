@@ -23,16 +23,14 @@ public class Chat extends JPanel{
 	public Chat() throws IOException {
 		//server config
 		String serverIP = "127.0.0.1";
-		int serverPort = 2014;
-		int maxUsersCount = 5;
+		String serverPort = "2014";
+		String maxUsersCount = "5";
 		URL url = this.getClass().getResource("Server.cfg");
 		if(url != null) {
 			Scanner serverInput = new Scanner(url.openStream());
 			HashMap<String, String> configs = new HashMap<>();
 			while(serverInput.hasNextLine()) {
 				String nextLine = serverInput.nextLine();
-				nextLine = nextLine.replaceAll(" ", "");
-				nextLine = nextLine.replaceAll("\t", "");
 				String[] params = nextLine.split("=");
 				if(params.length > 1) {
 					configs.put(params[0].toLowerCase(), params[1]);	
@@ -43,16 +41,37 @@ public class Chat extends JPanel{
 				serverIP = configs.get("ip");
 			}
 			if(configs.get("port") != null) {
-				try {
-					serverPort = Integer.parseInt(configs.get("port"));					
-				} catch (NumberFormatException e) {
-				}
+				serverPort = configs.get("port");					
 			}
 			if(configs.get("maxuserscount") != null) {
-				try {
-					maxUsersCount = Integer.parseInt(configs.get("maxuserscount"));					
-				} catch (NumberFormatException e) {
+				maxUsersCount = configs.get("maxuserscount");
+			}
+		}
+		
+		//client config
+		String connectToIP = "127.0.0.1";
+		String connectToPort = "2014";
+		String userName = "User";
+		url = this.getClass().getResource("Client.cfg");
+		if(url != null) {
+			Scanner clientInput = new Scanner(url.openStream());
+			HashMap<String, String> configs = new HashMap<>();
+			while(clientInput.hasNextLine()) {
+				String nextLine = clientInput.nextLine();
+				String[] params = nextLine.split("=");
+				if(params.length > 1) {
+					configs.put(params[0].toLowerCase(), params[1]);	
 				}				
+			}
+			clientInput.close();
+			if(configs.get("ip") != null) {
+				connectToIP = configs.get("ip");
+			}
+			if(configs.get("port") != null) {
+				connectToPort = configs.get("port");					
+			}
+			if(configs.get("username") != null) {
+				userName = configs.get("username");			
 			}
 		}
 		
@@ -76,13 +95,13 @@ public class Chat extends JPanel{
 		JLabel jlblServerPort = new JLabel("Port: ");
 		jlblServerPort.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigServer.add(jlblServerPort);
-		JTextField jtfServerPort = new JTextField(serverPort + "", 7);
+		JTextField jtfServerPort = new JTextField(serverPort, 7);
 		jpConfigServer.add(jtfServerPort);
 		
 		JLabel jlblServerCount = new JLabel("Max Users Count: ");
 		jlblServerCount.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigServer.add(jlblServerCount);
-		JTextField jtfServerCount = new JTextField(maxUsersCount + "", 7);
+		JTextField jtfServerCount = new JTextField(maxUsersCount, 7);
 		jpConfigServer.add(jtfServerCount);
 		
 		JPanel jpStartServer = new JPanel(new BorderLayout());
@@ -104,19 +123,19 @@ public class Chat extends JPanel{
 		JLabel jlblConnectToIp = new JLabel("Ip: ");
 		jlblConnectToIp.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigClient.add(jlblConnectToIp);
-		JTextField jtfConnectToIp = new JTextField(7);
+		JTextField jtfConnectToIp = new JTextField(connectToIP, 7);
 		jpConfigClient.add(jtfConnectToIp);
 		
 		JLabel jlblConnectToPort = new JLabel("Port: ");
 		jlblConnectToPort.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigClient.add(jlblConnectToPort);
-		JTextField jtfConnectToPort = new JTextField(7);
+		JTextField jtfConnectToPort = new JTextField(connectToPort, 7);
 		jpConfigClient.add(jtfConnectToPort);
 		
 		JLabel jlblUserName = new JLabel("User Name: ");
 		jlblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigClient.add(jlblUserName);
-		JTextField jtfUserName = new JTextField(7);
+		JTextField jtfUserName = new JTextField(userName, 7);
 		jpConfigClient.add(jtfUserName);
 		
 		JPanel jpStartClient = new JPanel(new BorderLayout());
