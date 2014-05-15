@@ -13,10 +13,10 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-public class JavaChat extends JPanel{
+public class Chat extends JPanel{
 	private static final long serialVersionUID = 1L;
 	
-	public JavaChat() {
+	public Chat() {
 		setLayout(new BorderLayout());
 		JPanel jpStart = new JPanel(new GridLayout(1, 2, 5, 5));
 		jpStart.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -95,12 +95,11 @@ public class JavaChat extends JPanel{
 	}
 	
 	public static void main(String[] args) {
-		JFrame frame = new JFrame("JavaChat, created by Viktor Bohush");
-		frame.add(new JavaChat());
+		JFrame frame = new JFrame("Chat, created by Viktor Bohush");
+		frame.add(new Chat());
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();
 		frame.setMinimumSize(new Dimension(frame.getWidth(), frame.getHeight()));
-		//frame.setSize(400, 200);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 	}
