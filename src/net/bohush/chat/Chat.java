@@ -3,6 +3,10 @@ package net.bohush.chat;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -16,11 +20,48 @@ import javax.swing.border.TitledBorder;
 public class Chat extends JPanel{
 	private static final long serialVersionUID = 1L;
 	
-	public Chat() {
+	public Chat() throws IOException {
+		//server config
+		String serverIP = "127.0.0.1";
+		int serverPort = 2014;
+		int maxUsersCount = 5;
+		URL url = this.getClass().getResource("Server.cfg");
+		if(url != null) {
+			Scanner serverInput = new Scanner(url.openStream());
+			HashMap<String, String> configs = new HashMap<>();
+			while(serverInput.hasNextLine()) {
+				String nextLine = serverInput.nextLine();
+				nextLine = nextLine.replaceAll(" ", "");
+				nextLine = nextLine.replaceAll("\t", "");
+				String[] params = nextLine.split("=");
+				if(params.length > 1) {
+					configs.put(params[0].toLowerCase(), params[1]);	
+				}				
+			}
+			serverInput.close();
+			if(configs.get("ip") != null) {
+				serverIP = configs.get("ip");
+			}
+			if(configs.get("port") != null) {
+				try {
+					serverPort = Integer.parseInt(configs.get("port"));					
+				} catch (NumberFormatException e) {
+				}
+			}
+			if(configs.get("maxuserscount") != null) {
+				try {
+					maxUsersCount = Integer.parseInt(configs.get("maxuserscount"));					
+				} catch (NumberFormatException e) {
+				}				
+			}
+		}
+		
+		//build UI
 		setLayout(new BorderLayout());
 		JPanel jpStart = new JPanel(new GridLayout(1, 2, 5, 5));
 		jpStart.setBorder(new EmptyBorder(5, 5, 5, 5));
 		
+		//Server UI
 		JPanel jpServer = new JPanel(new BorderLayout());
 		jpServer.setBorder(new TitledBorder("Server"));
 		
@@ -29,19 +70,19 @@ public class Chat extends JPanel{
 		JLabel jlblServerIp = new JLabel("Ip: ");
 		jlblServerIp.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigServer.add(jlblServerIp);
-		JTextField jtfServerIp = new JTextField(7);
+		JTextField jtfServerIp = new JTextField(serverIP, 7);
 		jpConfigServer.add(jtfServerIp);
 		
 		JLabel jlblServerPort = new JLabel("Port: ");
 		jlblServerPort.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigServer.add(jlblServerPort);
-		JTextField jtfServerPort = new JTextField(7);
+		JTextField jtfServerPort = new JTextField(serverPort + "", 7);
 		jpConfigServer.add(jtfServerPort);
 		
 		JLabel jlblServerCount = new JLabel("Max Users Count: ");
 		jlblServerCount.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigServer.add(jlblServerCount);
-		JTextField jtfServerCount = new JTextField(7);
+		JTextField jtfServerCount = new JTextField(maxUsersCount + "", 7);
 		jpConfigServer.add(jtfServerCount);
 		
 		JPanel jpStartServer = new JPanel(new BorderLayout());
@@ -54,6 +95,7 @@ public class Chat extends JPanel{
 		
 		jpStart.add(jpServer);
 
+		//Client UI
 		JPanel jpClient = new JPanel(new BorderLayout());
 		jpClient.setBorder(new TitledBorder("Client"));
 			
@@ -77,9 +119,6 @@ public class Chat extends JPanel{
 		JTextField jtfUserName = new JTextField(7);
 		jpConfigClient.add(jtfUserName);
 		
-		
-		
-		
 		JPanel jpStartClient = new JPanel(new BorderLayout());
 		jpStartClient.setBorder(new EmptyBorder(10, 10, 10, 10));
 		JButton jbtnStartClient = new JButton("Connect to Server");
@@ -94,7 +133,7 @@ public class Chat extends JPanel{
 		add(jpStart, BorderLayout.CENTER);
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		JFrame frame = new JFrame("Chat, created by Viktor Bohush");
 		frame.add(new Chat());
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
