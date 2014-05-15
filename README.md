@@ -9,7 +9,7 @@ Requirements:
 
 2. Server should support Unicode (at least english/russian language).
 
-3. Server should be configured via config files. Following settings should be present: ip, port, max users count.
+~~3. Server should be configured via config files. Following settings should be present: ip, port, max users count.~~
 
 4. Client should be able to send/receive simple Unicode messages to all users in chat.
 
@@ -26,7 +26,7 @@ Optional features:
 
 5. Chat client should support rich text features (font styles, colors).
 
-6. Configure server using GUI.
+~~6. Configure server using GUI.~~
 
 "Requirements" section describes what should be done in any case.
 

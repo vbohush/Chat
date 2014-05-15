@@ -8,7 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -31,8 +31,9 @@ public class Chat extends JPanel{
 	private JTextField jtfConnectToPort;
 	private JTextField jtfUserName;
 	
-	File serverConfigFile = new File(this.getClass().getResource("/").getPath() + "Server.cfg");
-	File clientConfigFile = new File(this.getClass().getResource("/").getPath() + "Client.cfg");
+	File serverConfigFile = new File(this.getClass().getResource("/").getPath() + "Server.txt");
+	File clientConfigFile = new File(this.getClass().getResource("/").getPath() + "Client.txt");
+	String charsetName = StandardCharsets.UTF_8.name();
 	
 	public Chat()  {
 		//server config
@@ -42,7 +43,7 @@ public class Chat extends JPanel{
 		if(serverConfigFile.exists()) {
 			Scanner serverInput;
 			try {
-				serverInput = new Scanner(serverConfigFile);
+				serverInput = new Scanner(serverConfigFile, charsetName);
 				HashMap<String, String> configs = new HashMap<>();
 				while(serverInput.hasNextLine()) {
 					String nextLine = serverInput.nextLine();
@@ -72,7 +73,7 @@ public class Chat extends JPanel{
 		if(clientConfigFile.exists()) {
 			Scanner clientInput;
 			try {
-				clientInput = new Scanner(clientConfigFile);
+				clientInput = new Scanner(clientConfigFile, charsetName);
 				HashMap<String, String> configs = new HashMap<>();
 				while(clientInput.hasNextLine()) {
 					String nextLine = clientInput.nextLine();
@@ -139,6 +140,12 @@ public class Chat extends JPanel{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String ip = jtfServerIp.getText();
+				if(ip.equals("")) {
+					JOptionPane.showMessageDialog(null, "Enter Ip Address", "Error", JOptionPane.ERROR_MESSAGE);
+					jtfServerIp.requestFocus();
+					return;
+				}
+				
 				int port = 0;
 				try {
 					port = Integer.parseInt(jtfServerPort.getText());
@@ -157,14 +164,14 @@ public class Chat extends JPanel{
 						throw new NumberFormatException();
 					}
 				} catch (NumberFormatException e2) {
-					JOptionPane.showMessageDialog(null, "\"Max Users Count\" must be an integer greater than 1", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "\"Max Users Count\" must be an integer between 2 and " + Integer.MAX_VALUE, "Error", JOptionPane.ERROR_MESSAGE);
 					jtfServerCount.requestFocus();
 					return;
 				}
 
 				try {					
-					PrintWriter output = new PrintWriter(serverConfigFile);
-					output.write("ip=" + ip + "\nport=" + port + "\nmaxuserscount=" + maxUsersCount);
+					PrintWriter output = new PrintWriter(serverConfigFile, charsetName);
+					output.write("ip=" + ip + "\r\nport=" + port + "\r\nmaxuserscount=" + maxUsersCount);
 					output.close();
 				} catch (IOException e2) {
 				}
@@ -205,6 +212,46 @@ public class Chat extends JPanel{
 		jpClient.add(jpStartClient, BorderLayout.SOUTH);
 		
 		jpStart.add(jpClient);
+		
+		//start client
+		jbtnStartClient.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				String ip = jtfConnectToIp.getText();
+				if(ip.equals("")) {
+					JOptionPane.showMessageDialog(null, "Enter Ip Address", "Error", JOptionPane.ERROR_MESSAGE);
+					jtfConnectToIp.requestFocus();
+					return;
+				}
+				
+				int port = 0;
+				try {
+					port = Integer.parseInt(jtfConnectToPort.getText());
+					if((port < 1) || (port > 65535)) {
+						throw new NumberFormatException();
+					}
+				} catch (NumberFormatException e2) {
+					JOptionPane.showMessageDialog(null, "\"Port Number\" must be an integer between 1 and 65535", "Error", JOptionPane.ERROR_MESSAGE);
+					jtfConnectToPort.requestFocus();
+					return;
+				}
+				
+				String userName = jtfUserName.getText();
+				if(userName.equals("")) {
+					JOptionPane.showMessageDialog(null, "Enter User Name", "Error", JOptionPane.ERROR_MESSAGE);
+					jtfUserName.requestFocus();
+					return;
+				}
+
+				try {					
+					PrintWriter output = new PrintWriter(clientConfigFile, charsetName);
+					output.write("ip=" + ip + "\r\nport=" + port + "\r\nusername=" + userName);
+					output.close();
+				} catch (IOException e2) {
+				}
+			}
+		});
 		
 		add(jpStart, BorderLayout.CENTER);
 	}
