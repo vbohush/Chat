@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -38,7 +39,7 @@ public class Chat extends JPanel{
 	private JPanel jpStart = new JPanel(new GridLayout(1, 2, 5, 5));
 	private File serverConfigFile = new File(this.getClass().getResource("/").getPath() + "Server.txt");
 	private File clientConfigFile = new File(this.getClass().getResource("/").getPath() + "Client.txt");
-	private String charsetName = StandardCharsets.UTF_8.name();
+	static String charsetName = StandardCharsets.UTF_8.name();
 	
 	public Chat(JFrame frame)  {
 		this.frame = frame;
@@ -267,11 +268,11 @@ public class Chat extends JPanel{
 					@SuppressWarnings("resource")
 					Socket socket = new Socket(ip, port);
 					
-					PrintWriter toServer = new PrintWriter(socket.getOutputStream());
+					PrintWriter toServer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), charsetName));
 					toServer.println(userName);
 					toServer.flush();
 					
-					Scanner fromServer = new Scanner(socket.getInputStream());
+					Scanner fromServer = new Scanner(socket.getInputStream(), charsetName);
 					String answer = fromServer.nextLine();
 					if(answer.equals("1")) {
 						JOptionPane.showMessageDialog(null, "User \"" + userName + "\" is already logged in", "Error", JOptionPane.ERROR_MESSAGE);

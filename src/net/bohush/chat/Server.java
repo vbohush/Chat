@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -64,8 +65,8 @@ public class Server extends JPanel implements Runnable {
 		
 		public void run() {
 			try {
-				Scanner fromClient = new Scanner(socket.getInputStream());
-				toClient = new PrintWriter(socket.getOutputStream());				
+				Scanner fromClient = new Scanner(socket.getInputStream(), Chat.charsetName);
+				toClient = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), Chat.charsetName));
 				userName = fromClient.nextLine();
 				
 				if(clients.size() > maxUsersCount) {
