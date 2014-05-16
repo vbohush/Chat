@@ -15,17 +15,21 @@ import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-public class Server extends JFrame {
+public class Server extends JPanel implements Runnable {
 	
 	private static final long serialVersionUID = 1L;
 	private JTextArea jta = new JTextArea();
 	private ArrayList<NewClient> clients = new ArrayList<>();
+	private ServerSocket serverSocket;
+	private int maxUsersCount;
 	
-	public Server() {
+	public Server(ServerSocket serverSocket, int maxUsersCount) {
+		this.serverSocket = serverSocket;
+		this.maxUsersCount = maxUsersCount;
 		setLayout(new BorderLayout());
 	    jta.setLineWrap(true);	 
 	    jta.setWrapStyleWord(true);
@@ -42,24 +46,9 @@ public class Server extends JFrame {
 		});
 	    
 	    add(jsp, BorderLayout.CENTER);
-		setTitle("Server");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(800, 500);
-		setLocationRelativeTo(null);
-		setVisible(true);
-
-		
-		try {
-			@SuppressWarnings("resource")
-			ServerSocket serverSocket = new ServerSocket(8000);
-			while(true) {
-				Socket socket = serverSocket.accept();
-				NewClient newClient = new NewClient(socket);
-				clients.add(newClient);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	    
+	    Thread thread = new Thread(this);
+	    thread.start();
 	}
 	
 	class NewClient implements Runnable {
@@ -99,7 +88,17 @@ public class Server extends JFrame {
 		
 	}
 
-	public static void main(String[] args) {
-		new Server();
+	@Override
+	public void run() {
+		try {
+			while(true) {
+				Socket socket = serverSocket.accept();
+				NewClient newClient = new NewClient(socket);
+				clients.add(newClient);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
+
 }

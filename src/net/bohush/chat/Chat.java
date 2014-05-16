@@ -8,6 +8,9 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -24,20 +27,22 @@ import javax.swing.border.TitledBorder;
 
 public class Chat extends JPanel{
 	private static final long serialVersionUID = 1L;
-	private JTextField jtfServerIp;
 	private JTextField jtfServerPort;
 	private JTextField jtfServerCount;
 	private JTextField jtfConnectToIp;
 	private JTextField jtfConnectToPort;
 	private JTextField jtfUserName;
 	
-	File serverConfigFile = new File(this.getClass().getResource("/").getPath() + "Server.txt");
-	File clientConfigFile = new File(this.getClass().getResource("/").getPath() + "Client.txt");
-	String charsetName = StandardCharsets.UTF_8.name();
+	private JFrame frame;
 	
-	public Chat()  {
+	private JPanel jpStart = new JPanel(new GridLayout(1, 2, 5, 5));
+	private File serverConfigFile = new File(this.getClass().getResource("/").getPath() + "Server.txt");
+	private File clientConfigFile = new File(this.getClass().getResource("/").getPath() + "Client.txt");
+	private String charsetName = StandardCharsets.UTF_8.name();
+	
+	public Chat(JFrame frame)  {
+		this.frame = frame;
 		//server config
-		String serverIP = "127.0.0.1";
 		String serverPort = "2014";
 		String maxUsersCount = "5";
 		if(serverConfigFile.exists()) {
@@ -53,9 +58,6 @@ public class Chat extends JPanel{
 					}				
 				}
 				serverInput.close();
-				if(configs.get("ip") != null) {
-					serverIP = configs.get("ip");
-				}
 				if(configs.get("port") != null) {
 					serverPort = configs.get("port");					
 				}
@@ -98,7 +100,6 @@ public class Chat extends JPanel{
 		
 		//build UI
 		setLayout(new BorderLayout());
-		JPanel jpStart = new JPanel(new GridLayout(1, 2, 5, 5));
 		jpStart.setBorder(new EmptyBorder(5, 5, 5, 5));
 		
 		//Server UI
@@ -107,11 +108,6 @@ public class Chat extends JPanel{
 		
 		JPanel jpConfigServer = new JPanel(new GridLayout(3, 3, 5, 20));
 		jpConfigServer.setBorder(new EmptyBorder(10, 10, 10, 10));
-		JLabel jlblServerIp = new JLabel("Ip Address: ");
-		jlblServerIp.setHorizontalAlignment(SwingConstants.RIGHT);
-		jpConfigServer.add(jlblServerIp);
-		jtfServerIp = new JTextField(serverIP, 7);
-		jpConfigServer.add(jtfServerIp);
 		
 		JLabel jlblServerPort = new JLabel("Port Number: ");
 		jlblServerPort.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -124,6 +120,9 @@ public class Chat extends JPanel{
 		jpConfigServer.add(jlblServerCount);
 		jtfServerCount = new JTextField(maxUsersCount, 7);
 		jpConfigServer.add(jtfServerCount);
+		
+		jpConfigServer.add(new JLabel(" "));
+		jpConfigServer.add(new JLabel(" "));
 		
 		JPanel jpStartServer = new JPanel(new BorderLayout());
 		jpStartServer.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -139,13 +138,7 @@ public class Chat extends JPanel{
 		jbtnStartServer.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String ip = jtfServerIp.getText();
-				if(ip.equals("")) {
-					JOptionPane.showMessageDialog(null, "Enter Ip Address", "Error", JOptionPane.ERROR_MESSAGE);
-					jtfServerIp.requestFocus();
-					return;
-				}
-				
+			
 				int port = 0;
 				try {
 					port = Integer.parseInt(jtfServerPort.getText());
@@ -169,12 +162,30 @@ public class Chat extends JPanel{
 					return;
 				}
 
-				try {					
-					PrintWriter output = new PrintWriter(serverConfigFile, charsetName);
-					output.write("ip=" + ip + "\r\nport=" + port + "\r\nmaxuserscount=" + maxUsersCount);
-					output.close();
+				try {
+					ServerSocket serverSocket = new ServerSocket(port);
+					
+					try {					
+						PrintWriter output = new PrintWriter(serverConfigFile, charsetName);
+						output.write("port=" + port + "\r\nmaxuserscount=" + maxUsersCount);
+						output.close();
+					} catch (IOException e2) {
+					}
+					
+					Chat.this.frame.setSize(640, 480);
+					Chat.this.frame.setLocationRelativeTo(null);
+
+					jpStart.removeAll();
+					jpStart.setLayout(new BorderLayout());
+					
+					jpStart.add(new Server(serverSocket, maxUsersCount), BorderLayout.CENTER);
+					jpStart.updateUI();
+					
 				} catch (IOException e2) {
+					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
+				
+
 			}
 		});
 
@@ -250,6 +261,13 @@ public class Chat extends JPanel{
 					output.close();
 				} catch (IOException e2) {
 				}
+				
+				/*
+				try {
+					InetAddress addr = InetAddress.getByName(ip);
+				} catch (UnknownHostException e2) {
+					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error1", JOptionPane.ERROR_MESSAGE);
+				}*/
 			}
 		});
 		
@@ -258,7 +276,7 @@ public class Chat extends JPanel{
 	
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("Chat, created by Viktor Bohush");
-		frame.add(new Chat());
+		frame.add(new Chat(frame));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();
 		frame.setMinimumSize(new Dimension(frame.getWidth(), frame.getHeight()));
