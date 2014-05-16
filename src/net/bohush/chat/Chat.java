@@ -175,7 +175,8 @@ public class Chat extends JPanel{
 									
 					Chat.this.frame.setSize(640, 480);
 					Chat.this.frame.setLocationRelativeTo(null);
-
+					Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", started at port " + port + " with max users count " + maxUsersCount);
+					
 					jpStart.removeAll();
 					jpStart.setLayout(new BorderLayout());
 					
@@ -272,9 +273,15 @@ public class Chat extends JPanel{
 					
 					Scanner fromServer = new Scanner(socket.getInputStream());
 					String answer = fromServer.nextLine();
-					System.out.println(answer);
-					if(answer.equals("0")) {
+					if(answer.equals("1")) {
 						JOptionPane.showMessageDialog(null, "User \"" + userName + "\" is already logged in", "Error", JOptionPane.ERROR_MESSAGE);
+						toServer.close();
+						fromServer.close();
+						socket.close();
+						jtfUserName.requestFocus();
+						return;
+					} if(answer.equals("2")) {
+						JOptionPane.showMessageDialog(null, "There are too many users logged in", "Error", JOptionPane.ERROR_MESSAGE);
 						toServer.close();
 						fromServer.close();
 						socket.close();
@@ -283,6 +290,7 @@ public class Chat extends JPanel{
 					} else {
 						Chat.this.frame.setSize(640, 480);
 						Chat.this.frame.setLocationRelativeTo(null);
+						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
 
 						jpStart.removeAll();
 						jpStart.setLayout(new BorderLayout());

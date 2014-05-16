@@ -5,7 +5,7 @@ Goal: implement simple chat server and client.
 
 Requirements:
 
-1. Server should handle at least 5 clients
+1. ~~Server should handle at least 5 clients~~
 
 2. ~~Server should support Unicode (at least english/russian language).~~
 

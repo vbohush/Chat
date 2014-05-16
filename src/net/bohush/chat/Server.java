@@ -33,8 +33,6 @@ public class Server extends JPanel implements Runnable {
 		this.serverSocket = serverSocket;
 		this.maxUsersCount = maxUsersCount;
 		setLayout(new BorderLayout());
-		jtaLog.setLineWrap(true);	 
-		jtaLog.setWrapStyleWord(true);
 		jtaLog.setEditable(false);
 		jtaLog.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
 		jtaLog.append(new Date() + " Startig Chat Server\n");
@@ -66,27 +64,47 @@ public class Server extends JPanel implements Runnable {
 		
 		public void run() {
 			try {
-				@SuppressWarnings("resource")
 				Scanner fromClient = new Scanner(socket.getInputStream());
-				toClient = new PrintWriter(socket.getOutputStream());
-				
+				toClient = new PrintWriter(socket.getOutputStream());				
 				userName = fromClient.nextLine();
+				
+				if(clients.size() > maxUsersCount) {
+					toClient.println("2");
+					toClient.flush();
+					fromClient.close();
+					toClient.close();
+					synchronized (jtaLog) {
+						clients.remove(this);
+						jtaLog.append(new Date() + " Disallow connection from  " + socket + ", user name \""+ userName + "\", too many users\n");	
+						jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
+					}	
+					return;
+				}
+				
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
 						if((newClient !=  this)&&(newClient.getUserName().equals(userName))) {
-							toClient.println("0");
+							toClient.println("1");
 							toClient.flush();
+							fromClient.close();
+							toClient.close();
+							synchronized (jtaLog) {
+								clients.remove(this);
+								jtaLog.append(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");	
+								jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
+							}	
 							return;
 						}
 					}						
 				}
 				
 				
-				toClient.println("1");
+				toClient.println("0");
 				toClient.flush();
 				synchronized (jtaLog) {
-					jtaLog.append(new Date() + " Connection from  " + socket + "\n");	
-				}				
+					jtaLog.append(new Date() + " Connection from  " + socket + ", user name \""+ userName + "\"\n");
+					jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
+				}		
 				while(true) {
 					String text = fromClient.nextLine();
 					synchronized (jtaLog) {
@@ -101,7 +119,11 @@ public class Server extends JPanel implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (NoSuchElementException e) {
-				e.printStackTrace();
+				clients.remove(this);
+				synchronized (jtaLog) {
+					jtaLog.append(new Date() + " Disconnect client " + socket + ", user name \""+ userName + "\"\n");
+					jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
+				}
 			}
 		}
 		
