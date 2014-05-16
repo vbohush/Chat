@@ -10,8 +10,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -23,7 +25,7 @@ public class Server extends JPanel implements Runnable {
 	
 	private static final long serialVersionUID = 1L;
 	private JTextArea jtaLog = new JTextArea();
-	private ArrayList<NewClient> clients = new ArrayList<>();
+	private List<NewClient> clients = Collections.synchronizedList(new ArrayList<NewClient>());
 	private ServerSocket serverSocket;
 	private int maxUsersCount;
 	
@@ -53,6 +55,7 @@ public class Server extends JPanel implements Runnable {
 	
 	class NewClient implements Runnable {
 		private Socket socket;
+		private String userName = "";
 		private PrintWriter toClient;
 		
 		public NewClient(Socket socket) {
@@ -66,18 +69,44 @@ public class Server extends JPanel implements Runnable {
 				@SuppressWarnings("resource")
 				Scanner fromClient = new Scanner(socket.getInputStream());
 				toClient = new PrintWriter(socket.getOutputStream());
-				jtaLog.append(new Date() + " Connection from  " + socket + "\n");
+				
+				userName = fromClient.nextLine();
+				synchronized (clients) {
+					for (NewClient newClient : clients) {
+						if((newClient !=  this)&&(newClient.getUserName().equals(userName))) {
+							toClient.println("0");
+							toClient.flush();
+							return;
+						}
+					}						
+				}
+				
+				
+				toClient.println("1");
+				toClient.flush();
+				synchronized (jtaLog) {
+					jtaLog.append(new Date() + " Connection from  " + socket + "\n");	
+				}				
 				while(true) {
 					String text = fromClient.nextLine();
-					jtaLog.append(new Date() + " " + text + "\n");
-					for (NewClient newClient : clients) {
-						newClient.send(text);
+					synchronized (jtaLog) {
+						jtaLog.append(new Date() + " " + text + "\n");	
+					}
+					synchronized (clients) {
+						for (NewClient newClient : clients) {
+							newClient.send(text);
+						}						
 					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
-			} catch (NoSuchElementException e) {				
+			} catch (NoSuchElementException e) {
+				e.printStackTrace();
 			}
+		}
+		
+		public String getUserName() {
+			return userName;
 		}
 		
 		public void send(String text) {

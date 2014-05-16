@@ -23,15 +23,16 @@ public class Client extends JPanel {
 	
 	private static final long serialVersionUID = 1L;
 	private JTextArea jta = new JTextArea();
-	private PrintWriter toServer;
 	private JTextField jtfMessage = new JTextField();
 	
-	private Socket socket;
+	private PrintWriter toServer;
+	private Scanner fromServer;
 	private String userName;
 	
-	public Client(Socket socket, String userName) {
-		this.socket = socket;
+	public Client(PrintWriter toServer, Scanner fromServer, String userName) {
 		this.userName = userName;
+		this.toServer = toServer;
+		this.fromServer = fromServer;
 		setLayout(new BorderLayout(5, 5));
 		JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
 		mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -58,44 +59,36 @@ public class Client extends JPanel {
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
 	    add(mainPanel, BorderLayout.CENTER);
 	    
+		new ReceiveMessage();
+		
 	    jtfMessage.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!jtfMessage.getText().equals("")) {
-					toServer.println(Client.this.userName + ": " + jtfMessage.getText());
-					toServer.flush();
+					Client.this.toServer.println(Client.this.userName + ": " + jtfMessage.getText());
+					Client.this.toServer.flush();
 					jtfMessage.setText("");
 				}
 			}
 		});
 		
-		try {
-			toServer = new PrintWriter(socket.getOutputStream());
-			new ReceiveMessage(socket);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
 	}
 	
 	class ReceiveMessage implements Runnable {
-		private Socket socket;
-		public ReceiveMessage(Socket socket) {
-			this.socket = socket;
+		public ReceiveMessage() {
 			Thread thread = new Thread(this);
 			thread.start();
 		}
 		public void run() {
 			try {
-				@SuppressWarnings("resource")
-				Scanner fromServer = new Scanner(socket.getInputStream());
 				while(true) {
 					String text = fromServer.nextLine();
 					jta.append(text + "\n");
 				}
-			} catch (IOException e) {
+			} catch (NoSuchElementException e) {
 				e.printStackTrace();
-			} catch (NoSuchElementException e) {				
 			}
 		}
 	}

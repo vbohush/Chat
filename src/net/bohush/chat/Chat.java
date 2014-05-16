@@ -263,17 +263,33 @@ public class Chat extends JPanel{
 				}
 				//connect to server
 				try {
+					@SuppressWarnings("resource")
 					Socket socket = new Socket(ip, port);
 					
-					Chat.this.frame.setSize(640, 480);
-					Chat.this.frame.setLocationRelativeTo(null);
+					PrintWriter toServer = new PrintWriter(socket.getOutputStream());
+					toServer.println(userName);
+					toServer.flush();
+					
+					Scanner fromServer = new Scanner(socket.getInputStream());
+					String answer = fromServer.nextLine();
+					System.out.println(answer);
+					if(answer.equals("0")) {
+						JOptionPane.showMessageDialog(null, "User \"" + userName + "\" is already logged in", "Error", JOptionPane.ERROR_MESSAGE);
+						toServer.close();
+						fromServer.close();
+						socket.close();
+						jtfUserName.requestFocus();
+						return;
+					} else {
+						Chat.this.frame.setSize(640, 480);
+						Chat.this.frame.setLocationRelativeTo(null);
 
-					jpStart.removeAll();
-					jpStart.setLayout(new BorderLayout());
-					
-					jpStart.add(new Client(socket, userName), BorderLayout.CENTER);
-					jpStart.updateUI();
-					
+						jpStart.removeAll();
+						jpStart.setLayout(new BorderLayout());
+						
+						jpStart.add(new Client(toServer, fromServer, userName), BorderLayout.CENTER);
+						jpStart.updateUI();
+					}					
 				} catch (UnknownHostException e2) {
 					JOptionPane.showMessageDialog(null, "Unknown host: \"" + ip + "\"", "Error", JOptionPane.ERROR_MESSAGE);
 					jtfConnectToIp.requestFocus();
