@@ -2,7 +2,6 @@ package net.bohush.chat;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -13,24 +12,26 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-public class Client extends JFrame {
+public class Client extends JPanel {
 	
 	private static final long serialVersionUID = 1L;
 	private JTextArea jta = new JTextArea();
 	private PrintWriter toServer;
-	private JTextField jTextField1 = new JTextField();
-	private JTextField jTextField2 = new JTextField();
+	private JTextField jtfMessage = new JTextField();
 	
-	public Client() {
+	private Socket socket;
+	private String userName;
+	
+	public Client(Socket socket, String userName) {
+		this.socket = socket;
+		this.userName = userName;
 		setLayout(new BorderLayout(5, 5));
 		JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
 		mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -51,44 +52,25 @@ public class Client extends JFrame {
 		
 	    mainPanel.add(jsp, BorderLayout.CENTER);
 	    
-	    JPanel jPanel1 = new JPanel(new GridLayout(2, 1, 5, 5));
-	    JPanel jPanel2 = new JPanel(new BorderLayout(5, 5));
-	    jPanel2.add(new JLabel("Name "), BorderLayout.WEST);	    
-	    jPanel2.add(jTextField1, BorderLayout.CENTER);
-	    JPanel jPanel3 = new JPanel(new BorderLayout(5, 5));
-	    jPanel3.add(new JLabel("Enter text "), BorderLayout.WEST);
-	    jPanel3.add(jTextField2, BorderLayout.CENTER);
-	    jPanel1.add(jPanel2);
-	    jPanel1.add(jPanel3);
-	    mainPanel.add(jPanel1, BorderLayout.SOUTH);
+	    JPanel jpMessage = new JPanel(new BorderLayout(5, 5));
+	    jpMessage.add(new JLabel("Enter text "), BorderLayout.WEST);
+	    jpMessage.add(jtfMessage, BorderLayout.CENTER);
+	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
 	    add(mainPanel, BorderLayout.CENTER);
 	    
-	    jTextField2.addActionListener(new ActionListener() {
+	    jtfMessage.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(jTextField1.getText().equals("")) {
-					JOptionPane.showMessageDialog(null, "Enter your name!", "Waring", JOptionPane.WARNING_MESSAGE);
-					jTextField1.requestFocus();
-				} else if (jTextField2.getText().equals("")) {
-					JOptionPane.showMessageDialog(null, "Enter message!", "Waring", JOptionPane.WARNING_MESSAGE);
-					jTextField2.requestFocus();
-				} else {
-					toServer.println(jTextField1.getText() + ": " + jTextField2.getText());
+				if (!jtfMessage.getText().equals("")) {
+					toServer.println(Client.this.userName + ": " + jtfMessage.getText());
 					toServer.flush();
-					jTextField2.setText("");
+					jtfMessage.setText("");
 				}
 			}
 		});
-	    
-		setTitle("Client");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(800, 500);
-		setLocationRelativeTo(null);
-		setVisible(true);
 		
 		try {
-			Socket socket = new Socket("localhost", 8000); 
 			toServer = new PrintWriter(socket.getOutputStream());
 			new ReceiveMessage(socket);
 		} catch (IOException e) {
@@ -118,7 +100,4 @@ public class Client extends JFrame {
 		}
 	}
 
-	public static void main(String[] args) {
-		new Client();
-	}
 }

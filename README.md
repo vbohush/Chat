@@ -7,7 +7,7 @@ Requirements:
 
 1. Server should handle at least 5 clients
 
-2. Server should support Unicode (at least english/russian language).
+2. ~~Server should support Unicode (at least english/russian language).~~
 
 3. ~~Server should be configured via config files. Following settings should be present: ip, port, max users count.~~
 

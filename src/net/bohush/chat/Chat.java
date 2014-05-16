@@ -8,8 +8,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -138,7 +138,7 @@ public class Chat extends JPanel{
 		jbtnStartServer.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-			
+				//check port
 				int port = 0;
 				try {
 					port = Integer.parseInt(jtfServerPort.getText());
@@ -150,6 +150,7 @@ public class Chat extends JPanel{
 					jtfServerPort.requestFocus();
 					return;
 				}
+				//check max users count
 				int maxUsersCount = 0;
 				try {
 					maxUsersCount = Integer.parseInt(jtfServerCount.getText());
@@ -161,17 +162,17 @@ public class Chat extends JPanel{
 					jtfServerCount.requestFocus();
 					return;
 				}
-
+				//safe settings
+				try {					
+					PrintWriter output = new PrintWriter(serverConfigFile, charsetName);
+					output.write("port=" + port + "\r\nmaxuserscount=" + maxUsersCount);
+					output.close();
+				} catch (IOException e2) {
+				}
+				//start server
 				try {
 					ServerSocket serverSocket = new ServerSocket(port);
-					
-					try {					
-						PrintWriter output = new PrintWriter(serverConfigFile, charsetName);
-						output.write("port=" + port + "\r\nmaxuserscount=" + maxUsersCount);
-						output.close();
-					} catch (IOException e2) {
-					}
-					
+									
 					Chat.this.frame.setSize(640, 480);
 					Chat.this.frame.setLocationRelativeTo(null);
 
@@ -185,7 +186,6 @@ public class Chat extends JPanel{
 					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
 				
-
 			}
 		});
 
@@ -228,14 +228,14 @@ public class Chat extends JPanel{
 		jbtnStartClient.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				//check ip
 				String ip = jtfConnectToIp.getText();
 				if(ip.equals("")) {
 					JOptionPane.showMessageDialog(null, "Enter Ip Address", "Error", JOptionPane.ERROR_MESSAGE);
 					jtfConnectToIp.requestFocus();
 					return;
 				}
-				
+				//check port
 				int port = 0;
 				try {
 					port = Integer.parseInt(jtfConnectToPort.getText());
@@ -247,27 +247,40 @@ public class Chat extends JPanel{
 					jtfConnectToPort.requestFocus();
 					return;
 				}
-				
+				//check user name
 				String userName = jtfUserName.getText();
 				if(userName.equals("")) {
 					JOptionPane.showMessageDialog(null, "Enter User Name", "Error", JOptionPane.ERROR_MESSAGE);
 					jtfUserName.requestFocus();
 					return;
 				}
-
+				//save settings
 				try {					
 					PrintWriter output = new PrintWriter(clientConfigFile, charsetName);
 					output.write("ip=" + ip + "\r\nport=" + port + "\r\nusername=" + userName);
 					output.close();
 				} catch (IOException e2) {
 				}
-				
-				/*
+				//connect to server
 				try {
-					InetAddress addr = InetAddress.getByName(ip);
+					Socket socket = new Socket(ip, port);
+					
+					Chat.this.frame.setSize(640, 480);
+					Chat.this.frame.setLocationRelativeTo(null);
+
+					jpStart.removeAll();
+					jpStart.setLayout(new BorderLayout());
+					
+					jpStart.add(new Client(socket, userName), BorderLayout.CENTER);
+					jpStart.updateUI();
+					
 				} catch (UnknownHostException e2) {
-					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error1", JOptionPane.ERROR_MESSAGE);
-				}*/
+					JOptionPane.showMessageDialog(null, "Unknown host: \"" + ip + "\"", "Error", JOptionPane.ERROR_MESSAGE);
+					jtfConnectToIp.requestFocus();
+				} catch (IOException e2) {
+					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				} 
+
 			}
 		});
 		

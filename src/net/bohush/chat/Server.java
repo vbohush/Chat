@@ -22,7 +22,7 @@ import javax.swing.JTextArea;
 public class Server extends JPanel implements Runnable {
 	
 	private static final long serialVersionUID = 1L;
-	private JTextArea jta = new JTextArea();
+	private JTextArea jtaLog = new JTextArea();
 	private ArrayList<NewClient> clients = new ArrayList<>();
 	private ServerSocket serverSocket;
 	private int maxUsersCount;
@@ -31,12 +31,12 @@ public class Server extends JPanel implements Runnable {
 		this.serverSocket = serverSocket;
 		this.maxUsersCount = maxUsersCount;
 		setLayout(new BorderLayout());
-	    jta.setLineWrap(true);	 
-	    jta.setWrapStyleWord(true);
-	    jta.setEditable(false);
-	    jta.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
-	    jta.append(new Date() + " Startig Chat Server\n");
-	    JScrollPane jsp = new JScrollPane(jta);
+		jtaLog.setLineWrap(true);	 
+		jtaLog.setWrapStyleWord(true);
+		jtaLog.setEditable(false);
+		jtaLog.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
+		jtaLog.append(new Date() + " Startig Chat Server\n");
+	    JScrollPane jsp = new JScrollPane(jtaLog);
 	    
 		jsp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
 			@Override
@@ -66,10 +66,10 @@ public class Server extends JPanel implements Runnable {
 				@SuppressWarnings("resource")
 				Scanner fromClient = new Scanner(socket.getInputStream());
 				toClient = new PrintWriter(socket.getOutputStream());
-				jta.append(new Date() + " Connection from  " + socket + "\n");
+				jtaLog.append(new Date() + " Connection from  " + socket + "\n");
 				while(true) {
 					String text = fromClient.nextLine();
-					jta.append(new Date() + " " + text + "\n");
+					jtaLog.append(new Date() + " " + text + "\n");
 					for (NewClient newClient : clients) {
 						newClient.send(text);
 					}
