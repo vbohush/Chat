@@ -11,7 +11,7 @@ Requirements:
 
 3. ~~Server should be configured via config files. Following settings should be present: ip, port, max users count.~~
 
-4. Client should be able to send/receive simple Unicode messages to all users in chat.
+4. ~~Client should be able to send/receive simple Unicode messages to all users in chat.~~
 
 
 Optional features:
