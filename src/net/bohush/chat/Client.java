@@ -58,6 +58,7 @@ public class Client extends JPanel {
 	    add(mainPanel, BorderLayout.CENTER);
 	    
 		new ReceiveMessage();
+		jtfMessage.requestFocus();
 		
 	    jtfMessage.addActionListener(new ActionListener() {
 			
@@ -67,12 +68,17 @@ public class Client extends JPanel {
 					Client.this.toServer.println(Client.this.userName + ": " + jtfMessage.getText());
 					Client.this.toServer.flush();
 					jtfMessage.setText("");
+					jtfMessage.requestFocus();
 				}
 			}
 		});
-		
+	    
 	}
 	
+	public void setFocus() {
+		jtfMessage.requestFocus();
+	}
+		
 	class ReceiveMessage implements Runnable {
 		public ReceiveMessage() {
 			Thread thread = new Thread(this);

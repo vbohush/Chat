@@ -136,7 +136,7 @@ public class Chat extends JPanel{
 		jpStart.add(jpServer);
 		
 		//start server
-		jbtnStartServer.addActionListener(new ActionListener() {			
+		ActionListener startServerAction = new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//check port
@@ -189,7 +189,10 @@ public class Chat extends JPanel{
 				}
 				
 			}
-		});
+		};
+		jtfServerPort.addActionListener(startServerAction);
+		jtfServerCount.addActionListener(startServerAction);
+		jbtnStartServer.addActionListener(startServerAction);
 
 		//Client UI
 		JPanel jpClient = new JPanel(new BorderLayout());
@@ -227,7 +230,7 @@ public class Chat extends JPanel{
 		jpStart.add(jpClient);
 		
 		//start client
-		jbtnStartClient.addActionListener(new ActionListener() {			
+		ActionListener startClientAction = new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//check ip
@@ -294,10 +297,15 @@ public class Chat extends JPanel{
 						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
 
 						jpStart.removeAll();
+						
 						jpStart.setLayout(new BorderLayout());
 						
-						jpStart.add(new Client(toServer, fromServer, userName), BorderLayout.CENTER);
+						Client client = new Client(toServer, fromServer, userName); 
+						jpStart.add(client, BorderLayout.CENTER);
 						jpStart.updateUI();
+						client.setFocus();
+						
+						
 					}					
 				} catch (UnknownHostException e2) {
 					JOptionPane.showMessageDialog(null, "Unknown host: \"" + ip + "\"", "Error", JOptionPane.ERROR_MESSAGE);
@@ -307,7 +315,11 @@ public class Chat extends JPanel{
 				} 
 
 			}
-		});
+		};
+		jtfConnectToIp.addActionListener(startClientAction);
+		jtfConnectToPort.addActionListener(startClientAction);
+		jtfUserName.addActionListener(startClientAction);
+		jbtnStartClient.addActionListener(startClientAction);
 		
 		add(jpStart, BorderLayout.CENTER);
 	}
