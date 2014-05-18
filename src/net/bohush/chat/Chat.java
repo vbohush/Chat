@@ -300,11 +300,10 @@ public class Chat extends JPanel{
 						
 						jpStart.setLayout(new BorderLayout());
 						
-						Client client = new Client(toServer, fromServer, userName); 
+						Client client = new Client(toServer, fromServer); 
 						jpStart.add(client, BorderLayout.CENTER);
 						jpStart.updateUI();
 						client.setFocus();
-						
 						
 					}					
 				} catch (UnknownHostException e2) {

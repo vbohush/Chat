@@ -1,6 +1,7 @@
 package net.bohush.chat;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,7 +11,9 @@ import java.io.PrintWriter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -25,10 +28,8 @@ public class Client extends JPanel {
 	
 	private PrintWriter toServer;
 	private Scanner fromServer;
-	private String userName;
 	
-	public Client(PrintWriter toServer, Scanner fromServer, String userName) {
-		this.userName = userName;
+	public Client(PrintWriter toServer, Scanner fromServer) {
 		this.toServer = toServer;
 		this.fromServer = fromServer;
 		setLayout(new BorderLayout(5, 5));
@@ -55,6 +56,20 @@ public class Client extends JPanel {
 	    jpMessage.add(new JLabel("Enter text "), BorderLayout.WEST);
 	    jpMessage.add(jtfMessage, BorderLayout.CENTER);
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
+
+	    DefaultListModel<String> listModel = new DefaultListModel<>();
+		JList<String> jlst = new JList<>(listModel);
+		JScrollPane jsp2 = new JScrollPane(jlst);
+		jsp2.setPreferredSize(new Dimension(150, 150));
+		mainPanel.add(jsp2, BorderLayout.EAST);
+		  
+		listModel.add(0, "asd");
+		listModel.add(0, "asd1");
+		listModel.add(0, "asd2");
+		listModel.removeElement(new String("asd1"));
+		listModel.addElement("asd3");
+		
+		
 	    add(mainPanel, BorderLayout.CENTER);
 	    
 		new ReceiveMessage();
@@ -65,13 +80,15 @@ public class Client extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!jtfMessage.getText().equals("")) {
-					Client.this.toServer.println(Client.this.userName + ": " + jtfMessage.getText());
+					Client.this.toServer.println(jtfMessage.getText());
 					Client.this.toServer.flush();
 					jtfMessage.setText("");
 					jtfMessage.requestFocus();
 				}
 			}
 		});
+	    
+
 	    
 	}
 	
