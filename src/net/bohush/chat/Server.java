@@ -52,6 +52,7 @@ public class Server extends JPanel implements Runnable {
 	    thread.start();
 	}
 	
+	//accept new clients
 	@Override
 	public void run() {
 		try {
@@ -82,6 +83,7 @@ public class Server extends JPanel implements Runnable {
 				toClient = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), Chat.charsetName));
 				userName = fromClient.nextLine();
 				
+				//check max users count
 				if(clients.size() > maxUsersCount) {
 					toClient.println("2");
 					toClient.flush();
@@ -95,6 +97,7 @@ public class Server extends JPanel implements Runnable {
 					return;
 				}
 				
+				//check duplicate user name
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
 						if((newClient !=  this)&&(newClient.getUserName().equals(userName))) {
@@ -112,27 +115,37 @@ public class Server extends JPanel implements Runnable {
 					}						
 				}
 				
-				
+				//Ok, connect
 				toClient.println("0");
 				toClient.flush();
 				
+				//tell other clients about new user
 				Calendar timeConnected = new GregorianCalendar();
 				synchronized (jtaLog) {
 					jtaLog.append(timeConnected.getTime().toString() + " Connection from  " + socket + ", user name \""+ userName + "\"\n");
 					jtaLog.append(timeConnected.getTime().toString() + " Clients = " + clients.size() + "\n");
 				}
 				String sendNewUserEntered = String.format("[%02d:%02d:%02d] -= " + userName + " entered the chat =-", timeConnected.get(Calendar.HOUR_OF_DAY), timeConnected.get(Calendar.MINUTE), timeConnected.get(Calendar.SECOND));
+				//list of clients
+				StringBuilder users = new StringBuilder();
+				synchronized (clients) {
+					for (NewClient newClient : clients) {
+						users.append(newClient.getUserName() + "\n");
+					}						
+				}
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
 						newClient.sendMessages(sendNewUserEntered);
+						newClient.sendClients(clients.size(), users.toString());
 					}						
 				}
 		
+				//accept new messages from client
 				while(true) {
 					String text = fromClient.nextLine();
 					Calendar time = new GregorianCalendar();
 					synchronized (jtaLog) {
-						jtaLog.append(time.getTime().toString() + " " + text + "\n");	
+						jtaLog.append(time.getTime().toString() + " " + userName + ": " + text + "\n");	
 					}
 					String sendText = String.format("[%02d:%02d:%02d] " + userName + ": " + text, time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE), time.get(Calendar.SECOND));
 					synchronized (clients) {
@@ -144,6 +157,7 @@ public class Server extends JPanel implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (NoSuchElementException e) {
+				//disconnect
 				clients.remove(this);
 				Calendar timeLeaved = new GregorianCalendar();
 				synchronized (jtaLog) {
@@ -160,12 +174,7 @@ public class Server extends JPanel implements Runnable {
 		}
 		
 		/*private void sendUsers() {
-			StringBuilder users = new StringBuilder();
-			synchronized (clients) {
-				for (NewClient newClient : clients) {
-					users.append(newClient.getUserName() + "\n");
-				}						
-			}
+
 			toClient.println(clients.size());
 			synchronized (clients) {
 				for (NewClient newClient : clients) {
@@ -184,6 +193,13 @@ public class Server extends JPanel implements Runnable {
 		*/
 		public String getUserName() {
 			return userName;
+		}
+		
+		public void sendClients(int size, String text) {
+			toClient.println("2");
+			toClient.println(size + "");
+			toClient.println(text);
+			toClient.flush();
 		}
 		
 		public void sendMessages(String text) {

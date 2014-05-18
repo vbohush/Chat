@@ -11,7 +11,6 @@ import java.io.PrintWriter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -25,6 +24,7 @@ public class Client extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private JTextArea jta = new JTextArea();
 	private JTextField jtfMessage = new JTextField();
+	private JList<String> jlUsers = new JList<>();
 	
 	private PrintWriter toServer;
 	private Scanner fromServer;
@@ -57,17 +57,10 @@ public class Client extends JPanel {
 	    jpMessage.add(jtfMessage, BorderLayout.CENTER);
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
 
-	    DefaultListModel<String> listModel = new DefaultListModel<>();
-		JList<String> jlst = new JList<>(listModel);
-		JScrollPane jsp2 = new JScrollPane(jlst);
-		jsp2.setPreferredSize(new Dimension(150, 150));
-		mainPanel.add(jsp2, BorderLayout.EAST);
+		JScrollPane jspUsers = new JScrollPane(jlUsers);
+		jspUsers.setPreferredSize(new Dimension(150, 150));
+		mainPanel.add(jspUsers, BorderLayout.EAST);
 		  
-		listModel.add(0, "asd");
-		listModel.add(0, "asd1");
-		listModel.add(0, "asd2");
-		listModel.removeElement(new String("asd1"));
-		listModel.addElement("asd3");
 		
 		
 	    add(mainPanel, BorderLayout.CENTER);
@@ -104,8 +97,18 @@ public class Client extends JPanel {
 		public void run() {
 			try {
 				while(true) {
-					String text = fromServer.nextLine();
-					jta.append(text + "\n");
+					String command = fromServer.nextLine();
+					if(command.equals("1")) { //new message
+						String text = fromServer.nextLine();
+						jta.append(text + "\n");						
+					} else if(command.equals("2")) { //list of clients
+						int usersCount = Integer.parseInt(fromServer.nextLine());
+						String[] users = new String[usersCount];
+						for (int i = 0; i < users.length; i++) {
+							users[i] = fromServer.nextLine();
+						}
+						jlUsers.setListData(users);						
+					}
 				}
 			} catch (NoSuchElementException e) {
 				e.printStackTrace();
