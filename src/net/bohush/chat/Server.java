@@ -133,6 +133,7 @@ public class Server extends JPanel implements Runnable {
 						users.append(newClient.getUserName() + "\n");
 					}						
 				}
+				//send clients names
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
 						newClient.sendMessages(sendNewUserEntered);
@@ -165,32 +166,25 @@ public class Server extends JPanel implements Runnable {
 					jtaLog.append(timeLeaved.getTime().toString() + " Clients = " + clients.size() + "\n");
 				}
 				String sendNewUserEntered = String.format("[%02d:%02d:%02d] -= " + userName + " leaved the chat =-", timeLeaved.get(Calendar.HOUR_OF_DAY), timeLeaved.get(Calendar.MINUTE), timeLeaved.get(Calendar.SECOND));
+				
+				//list of clients
+				StringBuilder users = new StringBuilder();
+				synchronized (clients) {
+					for (NewClient newClient : clients) {
+						users.append(newClient.getUserName() + "\n");
+					}						
+				}
+				
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
 						newClient.sendMessages(sendNewUserEntered);
+						newClient.sendClients(clients.size(), users.toString());
 					}						
 				}
+
 			}
 		}
 		
-		/*private void sendUsers() {
-
-			toClient.println(clients.size());
-			synchronized (clients) {
-				for (NewClient newClient : clients) {
-					newClient.send(users.toString());
-				}						
-			}
-			for (int i = 0; i < clients.size(); i++) {
-				
-			}
-			
-			for (int i = 0; i < clients.size(); i++) {
-				users.append(clients.get(i).getUserName() + "\n");
-			}
-			toClient.flush();
-		}
-		*/
 		public String getUserName() {
 			return userName;
 		}

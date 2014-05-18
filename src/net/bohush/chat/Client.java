@@ -68,6 +68,7 @@ public class Client extends JPanel {
 		new ReceiveMessage();
 		jtfMessage.requestFocus();
 		
+		//send message
 	    jtfMessage.addActionListener(new ActionListener() {
 			
 			@Override
@@ -88,7 +89,8 @@ public class Client extends JPanel {
 	public void setFocus() {
 		jtfMessage.requestFocus();
 	}
-		
+	
+	//receive messages and users list
 	class ReceiveMessage implements Runnable {
 		public ReceiveMessage() {
 			Thread thread = new Thread(this);
