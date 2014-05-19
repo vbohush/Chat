@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -177,6 +179,18 @@ public class Chat extends JPanel{
 					Chat.this.frame.setSize(640, 480);
 					Chat.this.frame.setLocationRelativeTo(null);
 					Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", started at port " + port + " with max users count " + maxUsersCount);
+					Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+					
+					Chat.this.frame.addWindowListener(new WindowAdapter() {
+						@Override
+						public void windowClosing(WindowEvent e) {
+							int confirm = JOptionPane.showOptionDialog( null, "Are You Sure You Want to Stop the Server and Exit?",
+							"Exit Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+							if (confirm == JOptionPane.YES_OPTION) {
+								System.exit(0);
+							}
+						}
+					});
 					
 					jpStart.removeAll();
 					jpStart.setLayout(new BorderLayout());
@@ -295,7 +309,19 @@ public class Chat extends JPanel{
 						Chat.this.frame.setSize(640, 480);
 						Chat.this.frame.setLocationRelativeTo(null);
 						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
-
+						Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+						
+						Chat.this.frame.addWindowListener(new WindowAdapter() {
+							@Override
+							public void windowClosing(WindowEvent e) {
+								int confirm = JOptionPane.showOptionDialog( null, "Are You Sure You Want to Disconnect and Exit?",
+								"Exit Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+								if (confirm == JOptionPane.YES_OPTION) {
+									System.exit(0);
+								}
+							}
+						});
+						
 						jpStart.removeAll();
 						
 						jpStart.setLayout(new BorderLayout());
