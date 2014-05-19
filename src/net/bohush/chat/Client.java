@@ -7,8 +7,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
@@ -20,15 +18,23 @@ import javax.swing.JCheckBox;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 public class Client extends JPanel {
 	
 	private static final long serialVersionUID = 1L;
-	private JTextArea jta = new JTextArea();
+	
+	DefaultStyledDocument doc = new DefaultStyledDocument();	
+	private JTextPane jtpChat = new JTextPane(doc);
+	
 	private JTextField jtfMessage = new JTextField();
 	private JList<String> jlUsers = new JList<>();
 	
@@ -47,18 +53,12 @@ public class Client extends JPanel {
 		JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
 		
 		JPanel jpChat = new JPanel(new BorderLayout(5, 5));
-		jta.setWrapStyleWord(true);
-	    jta.setLineWrap(true);
-	    jta.setEditable(false);
-	    //jta.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-	    JScrollPane jsp = new JScrollPane(jta);
+		jtpChat.setEditable(false);		
+		((DefaultCaret) jtpChat.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);	    
+	    JScrollPane jsp = new JScrollPane(jtpChat);
+	    jsp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
 
-		jsp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
-			@Override
-			public void adjustmentValueChanged(AdjustmentEvent e) {
-				e.getAdjustable().setValue(e.getAdjustable().getMaximum());
-			}
-		});
 		jpChat.add(jsp, BorderLayout.CENTER);
 		jpChat.setBorder(new TitledBorder(new EmptyBorder(1, 1, 1, 1), "Chat"));
 		mainPanel.add(jpChat, BorderLayout.CENTER);
@@ -158,8 +158,53 @@ public class Client extends JPanel {
 				while(true) {
 					String command = fromServer.nextLine();
 					if(command.equals("1")) { //new message
-						String text = fromServer.nextLine();
-						jta.append(text + "\n");						
+						
+						int timeFontStyle = Integer.parseInt(fromServer.nextLine());
+						Color TimeColor = new Color(Integer.parseInt(fromServer.nextLine()));
+						String time = fromServer.nextLine();
+						int messageFontStyle = Integer.parseInt(fromServer.nextLine());
+						Color messageColor = new Color(Integer.parseInt(fromServer.nextLine()));;
+						String message = fromServer.nextLine();
+						
+						try {
+							SimpleAttributeSet aset = new SimpleAttributeSet();
+							StyleConstants.setForeground(aset, TimeColor);
+							if(timeFontStyle == Font.PLAIN) {
+								StyleConstants.setBold(aset, false);	
+								StyleConstants.setItalic(aset, false);							
+							} else if(timeFontStyle == Font.BOLD) {
+								StyleConstants.setBold(aset, true);	
+								StyleConstants.setItalic(aset, false);
+							} else if(timeFontStyle == Font.ITALIC) {
+								StyleConstants.setBold(aset, false);	
+								StyleConstants.setItalic(aset, true);		
+							} else if(timeFontStyle == Font.BOLD + Font.ITALIC) {
+								StyleConstants.setBold(aset, true);	
+								StyleConstants.setItalic(aset, true);		
+							}
+							doc.insertString(doc.getLength(), time, aset);
+							
+							aset = new SimpleAttributeSet();
+							StyleConstants.setForeground(aset, messageColor);
+							if(messageFontStyle == Font.PLAIN) {
+								StyleConstants.setBold(aset, false);	
+								StyleConstants.setItalic(aset, false);							
+							} else if(messageFontStyle == Font.BOLD) {
+								StyleConstants.setBold(aset, true);	
+								StyleConstants.setItalic(aset, false);
+							} else if(messageFontStyle == Font.ITALIC) {
+								StyleConstants.setBold(aset, false);	
+								StyleConstants.setItalic(aset, true);		
+							} else if(messageFontStyle == Font.BOLD + Font.ITALIC) {
+								StyleConstants.setBold(aset, true);	
+								StyleConstants.setItalic(aset, true);		
+							}
+							doc.insertString(doc.getLength(), message + "\n", aset);
+							
+						} catch (BadLocationException e) {
+							e.printStackTrace();
+						}
+					
 					} else if(command.equals("2")) { //list of clients
 						int usersCount = Integer.parseInt(fromServer.nextLine());
 						String[] users = new String[usersCount];

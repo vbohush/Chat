@@ -24,7 +24,7 @@ Optional features:
 
 4. Chat users can have different access priviledges (admin/user, admin is able to ban user).
 
-5. Chat client should support rich text features (font styles, colors).
+5. ~~Chat client should support rich text features (font styles, colors).~~
 
 6. ~~Configure server using GUI.~~
 
