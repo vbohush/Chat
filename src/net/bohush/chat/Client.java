@@ -11,13 +11,13 @@ import java.io.PrintWriter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 
 public class Client extends JPanel {
 	
@@ -34,8 +34,8 @@ public class Client extends JPanel {
 		this.fromServer = fromServer;
 		setLayout(new BorderLayout(5, 5));
 		JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
-		mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		
+		JPanel jpChat = new JPanel(new BorderLayout(5, 5));
 		jta.setWrapStyleWord(true);
 	    jta.setLineWrap(true);
 	    jta.setEditable(false);
@@ -48,18 +48,22 @@ public class Client extends JPanel {
 				e.getAdjustable().setValue(e.getAdjustable().getMaximum());
 			}
 		});
+		jpChat.add(jsp, BorderLayout.CENTER);
+		jpChat.setBorder(new TitledBorder(new EmptyBorder(1, 1, 1, 1), "Chat"));
+		mainPanel.add(jpChat, BorderLayout.CENTER);
 	    
 		
-	    mainPanel.add(jsp, BorderLayout.CENTER);
-	    
 	    JPanel jpMessage = new JPanel(new BorderLayout(5, 5));
-	    jpMessage.add(new JLabel("Enter text "), BorderLayout.WEST);
+	    jpMessage.setBorder(new EmptyBorder(0, 5, 0, 5));	    
 	    jpMessage.add(jtfMessage, BorderLayout.CENTER);
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
 
+		JPanel jpUsers = new JPanel(new BorderLayout(5, 5));
 		JScrollPane jspUsers = new JScrollPane(jlUsers);
 		jspUsers.setPreferredSize(new Dimension(150, 150));
-		mainPanel.add(jspUsers, BorderLayout.EAST);
+		jpUsers.add(jspUsers, BorderLayout.CENTER);
+		jpUsers.setBorder(new TitledBorder(new EmptyBorder(1, 1, 1, 1), "Users"));
+		mainPanel.add(jpUsers, BorderLayout.EAST);
 		  
 		
 		
