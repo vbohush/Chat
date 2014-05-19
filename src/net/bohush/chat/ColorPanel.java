@@ -32,6 +32,10 @@ public 	class ColorPanel extends JPanel {
 		return new Dimension(18, 18);
 	}
 	
+	public Color getColor() {
+		return color;
+	}
+	
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);

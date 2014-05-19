@@ -1,6 +1,7 @@
 package net.bohush.chat;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
@@ -143,6 +144,10 @@ public class Server extends JPanel implements Runnable {
 		
 				//accept new messages from client
 				while(true) {
+					int fontStyle = Integer.parseInt(fromClient.nextLine());
+					Color messageColor = new Color(Integer.parseInt(fromClient.nextLine()));
+					System.out.println(fontStyle);
+					System.out.println(messageColor);
 					String text = fromClient.nextLine();
 					Calendar time = new GregorianCalendar();
 					synchronized (jtaLog) {

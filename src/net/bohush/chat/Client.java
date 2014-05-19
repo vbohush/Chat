@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -29,6 +31,11 @@ public class Client extends JPanel {
 	private JTextArea jta = new JTextArea();
 	private JTextField jtfMessage = new JTextField();
 	private JList<String> jlUsers = new JList<>();
+	
+	private JCheckBox jcbBold = new JCheckBox("B");
+	private JCheckBox jcbItalic = new JCheckBox("I");
+	private ColorPanel colorPanel = new ColorPanel(Color.BLACK);
+	private int fontStyle = Font.PLAIN;
 	
 	private PrintWriter toServer;
 	private Scanner fromServer;
@@ -62,14 +69,11 @@ public class Client extends JPanel {
 	    jpMessage.add(jtfMessage, BorderLayout.CENTER);
 	    
 	    JPanel jpMessageOptions = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-	    JCheckBox jcbBold = new JCheckBox("B");
 	    jcbBold.setFont(jcbBold.getFont().deriveFont(Font.BOLD));
-	    jpMessageOptions.add(jcbBold);
-	    JCheckBox jcbItalic = new JCheckBox("I");
 	    jcbItalic.setFont(jcbItalic.getFont().deriveFont(Font.ITALIC));
+	    jpMessageOptions.add(jcbBold);	    
 	    jpMessageOptions.add(jcbItalic);
-	    ColorPanel clColor = new ColorPanel(Color.BLACK);
-	    jpMessageOptions.add(clColor);
+	    jpMessageOptions.add(colorPanel);
 	    JButton jbtnSend = new JButton("Send");
 	    jpMessageOptions.add(jbtnSend);
 	    
@@ -92,20 +96,50 @@ public class Client extends JPanel {
 		new ReceiveMessage();
 		jtfMessage.requestFocus();
 		
+		//change font style
+		ActionListener changeFontStyle = new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				fontStyle = Font.PLAIN;
+				if(jcbBold.isSelected()){
+					fontStyle = Font.BOLD;
+				}
+				if(jcbItalic.isSelected()){
+					if(fontStyle == Font.BOLD) {
+						fontStyle = Font.BOLD + Font.ITALIC;
+					} else {
+						fontStyle = Font.ITALIC;
+					}
+				}
+				jtfMessage.setFont(jtfMessage.getFont().deriveFont(fontStyle));
+			}
+		};
+		jcbBold.addActionListener(changeFontStyle);
+		jcbItalic.addActionListener(changeFontStyle);
+		colorPanel.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				jtfMessage.setForeground(colorPanel.getColor());	
+			}
+		});
+		
 		//send message
-	    jtfMessage.addActionListener(new ActionListener() {
-			
+		ActionListener sendMessage = new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!jtfMessage.getText().equals("")) {
+					Client.this.toServer.println(fontStyle + "");
+					Client.this.toServer.println(colorPanel.getColor().getRGB());
 					Client.this.toServer.println(jtfMessage.getText());
 					Client.this.toServer.flush();
 					jtfMessage.setText("");
 					jtfMessage.requestFocus();
 				}
 			}
-		});
+		};
 	    
+		jtfMessage.addActionListener(sendMessage);
+		jbtnSend.addActionListener(sendMessage);
 	}
 	
 
