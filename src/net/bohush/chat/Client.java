@@ -1,7 +1,9 @@
 package net.bohush.chat;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,6 +13,8 @@ import java.io.PrintWriter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -39,7 +43,7 @@ public class Client extends JPanel {
 		jta.setWrapStyleWord(true);
 	    jta.setLineWrap(true);
 	    jta.setEditable(false);
-	    jta.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+	    //jta.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
 	    JScrollPane jsp = new JScrollPane(jta);
 
 		jsp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
@@ -56,6 +60,22 @@ public class Client extends JPanel {
 	    JPanel jpMessage = new JPanel(new BorderLayout(5, 5));
 	    jpMessage.setBorder(new EmptyBorder(0, 5, 0, 5));	    
 	    jpMessage.add(jtfMessage, BorderLayout.CENTER);
+	    
+	    JPanel jpMessageOptions = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+	    JCheckBox jcbBold = new JCheckBox("B");
+	    jcbBold.setFont(jcbBold.getFont().deriveFont(Font.BOLD));
+	    jpMessageOptions.add(jcbBold);
+	    JCheckBox jcbItalic = new JCheckBox("I");
+	    jcbItalic.setFont(jcbItalic.getFont().deriveFont(Font.ITALIC));
+	    jpMessageOptions.add(jcbItalic);
+	    ColorPanel clColor = new ColorPanel(Color.BLACK);
+	    jpMessageOptions.add(clColor);
+	    JButton jbtnSend = new JButton("Send");
+	    jpMessageOptions.add(jbtnSend);
+	    
+	    
+	    jpMessage.add(jpMessageOptions, BorderLayout.EAST);
+	    
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
 
 		JPanel jpUsers = new JPanel(new BorderLayout(5, 5));
@@ -86,10 +106,9 @@ public class Client extends JPanel {
 			}
 		});
 	    
-
-	    
 	}
 	
+
 	public void setFocus() {
 		jtfMessage.requestFocus();
 	}
