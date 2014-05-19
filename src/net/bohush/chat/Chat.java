@@ -25,6 +25,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
@@ -44,6 +46,9 @@ public class Chat extends JPanel{
 	static String charsetName = StandardCharsets.UTF_8.name();
 	
 	public Chat(JFrame frame)  {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e1) {}
 		this.frame = frame;
 		//server config
 		String serverPort = "2014";
@@ -130,6 +135,7 @@ public class Chat extends JPanel{
 		JPanel jpStartServer = new JPanel(new BorderLayout());
 		jpStartServer.setBorder(new EmptyBorder(10, 10, 10, 10));
 		JButton jbtnStartServer = new JButton("Start Server");
+		jbtnStartServer.setPreferredSize(new Dimension(30, 30));
 		jpStartServer.add(jbtnStartServer, BorderLayout.CENTER);		
 		
 		jpServer.add(jpConfigServer, BorderLayout.CENTER);
@@ -235,6 +241,7 @@ public class Chat extends JPanel{
 		JPanel jpStartClient = new JPanel(new BorderLayout());
 		jpStartClient.setBorder(new EmptyBorder(10, 10, 10, 10));
 		JButton jbtnStartClient = new JButton("Connect to Server");
+		jbtnStartClient.setPreferredSize(new Dimension(30, 30));
 		jpStartClient.add(jbtnStartClient, BorderLayout.CENTER);
 		
 		

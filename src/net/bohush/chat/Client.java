@@ -81,7 +81,6 @@ public class Client extends JPanel {
 	    jpMessage.add(jpMessageOptions, BorderLayout.EAST);
 	    
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
-
 		JPanel jpUsers = new JPanel(new BorderLayout(5, 5));
 		JScrollPane jspUsers = new JScrollPane(jlUsers);
 		jspUsers.setPreferredSize(new Dimension(150, 150));
