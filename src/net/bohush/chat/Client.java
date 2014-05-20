@@ -44,8 +44,12 @@ public class Client extends JPanel {
 	
 	private PrintWriter toServer;
 	private Scanner fromServer;
-	
+
 	public Client(PrintWriter toServer, Scanner fromServer) {
+		this(toServer, fromServer, "n", "y", Color.BLACK.getRGB() + "");
+	}
+	
+	public Client(PrintWriter toServer, Scanner fromServer, String isFontBold, String isFontItalic, String fontColor) {
 		this.toServer = toServer;
 		this.fromServer = fromServer;
 		setLayout(new BorderLayout(5, 5));
@@ -139,8 +143,46 @@ public class Client extends JPanel {
 	    
 		jtfMessage.addActionListener(sendMessage);
 		jbtnSend.addActionListener(sendMessage);
+		
+		//apply font settings
+		if(isFontBold.equals("y")) {
+			jcbBold.setSelected(true);
+			
+		} else {
+			jcbBold.setSelected(false);
+		}
+		if(isFontItalic.equals("y")) {
+			jcbItalic.setSelected(true);
+			
+		} else {
+			jcbItalic.setSelected(false);
+		}
+		changeFontStyle.actionPerformed(null);
+		
+		try {
+			Color newFontColor = new Color(Integer.parseInt(fontColor));
+			colorPanel.setColor(newFontColor);
+			jtfMessage.setForeground(colorPanel.getColor());
+		} catch (NumberFormatException e) {
+		}
+
 	}
 	
+	public String getSettings() {
+		String result = "";
+		if(jcbBold.isSelected()) {
+			result += "isfontbold=y\r\n";
+		} else {
+			result += "isfontbold=n\r\n";
+		}
+		if(jcbItalic.isSelected()) {
+			result += "isfontitalic=y\r\n";
+		} else {
+			result += "isfontitalic=n\r\n";
+		}
+		result += "fontcolor=" + colorPanel.getColor().getRGB() + "\r\n";
+		return result;
+	}
 
 	public void setFocus() {
 		jtfMessage.requestFocus();

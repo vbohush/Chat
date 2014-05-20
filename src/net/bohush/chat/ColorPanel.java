@@ -32,6 +32,11 @@ public 	class ColorPanel extends JPanel {
 		return new Dimension(18, 18);
 	}
 	
+	public void setColor(Color color) {
+		this.color = color;
+		repaint();
+	}
+	
 	public Color getColor() {
 		return color;
 	}

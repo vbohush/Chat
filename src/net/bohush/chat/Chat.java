@@ -1,6 +1,7 @@
 package net.bohush.chat;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -44,6 +45,13 @@ public class Chat extends JPanel{
 	private File serverConfigFile = new File(this.getClass().getResource("/").getPath() + "Server.txt");
 	private File clientConfigFile = new File(this.getClass().getResource("/").getPath() + "Client.txt");
 	static String charsetName = StandardCharsets.UTF_8.name();
+	
+	//nedd for saving client settings
+	private String isFontBold = "n";
+	private String isFontItalic = "n";
+	private String fontColor = Color.BLACK.getRGB() + "";
+	private String clientSettings = "";
+	private Client client;
 	
 	public Chat(JFrame frame)  {
 		try {
@@ -101,6 +109,15 @@ public class Chat extends JPanel{
 				}
 				if(configs.get("username") != null) {
 					userName = configs.get("username");			
+				}
+				if((configs.get("isfontbold") != null) && (configs.get("isfontbold").equals("y"))) {
+					isFontBold = "y";			
+				}
+				if((configs.get("isfontitalic") != null) && (configs.get("isfontitalic").equals("y"))) {
+					isFontItalic = "y";			
+				}
+				if(configs.get("fontcolor") != null) {
+					fontColor = configs.get("fontcolor");					
 				}
 			} catch (IOException e) {
 			}
@@ -189,8 +206,8 @@ public class Chat extends JPanel{
 					Chat.this.frame.addWindowListener(new WindowAdapter() {
 						@Override
 						public void windowClosing(WindowEvent e) {
-							int confirm = JOptionPane.showOptionDialog( null, "Are You Sure You Want to Stop the Server and Exit?",
-							"Exit Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+							int confirm = JOptionPane.showOptionDialog( null, "Are you sure you want to stop the server and exit?",
+							"Exit confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 							if (confirm == JOptionPane.YES_OPTION) {
 								System.exit(0);
 							}
@@ -218,7 +235,7 @@ public class Chat extends JPanel{
 			
 		JPanel jpConfigClient = new JPanel(new GridLayout(3, 3, 5, 20));
 		jpConfigClient.setBorder(new EmptyBorder(10, 10, 10, 10));
-		JLabel jlblConnectToIp = new JLabel("Ip Address: ");
+		JLabel jlblConnectToIp = new JLabel("IP Address: ");
 		jlblConnectToIp.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigClient.add(jlblConnectToIp);
 		jtfConnectToIp = new JTextField(connectToIP, 7);
@@ -255,7 +272,7 @@ public class Chat extends JPanel{
 				//check ip
 				String ip = jtfConnectToIp.getText();
 				if(ip.equals("")) {
-					JOptionPane.showMessageDialog(null, "Enter Ip Address", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Enter IP address", "Error", JOptionPane.ERROR_MESSAGE);
 					jtfConnectToIp.requestFocus();
 					return;
 				}
@@ -274,17 +291,14 @@ public class Chat extends JPanel{
 				//check user name
 				String userName = jtfUserName.getText();
 				if(userName.equals("")) {
-					JOptionPane.showMessageDialog(null, "Enter User Name", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Enter user name", "Error", JOptionPane.ERROR_MESSAGE);
 					jtfUserName.requestFocus();
 					return;
 				}
+				clientSettings = "ip=" + ip + "\r\nport=" + port + "\r\nusername=" + userName + "\r\n";
 				//save settings
-				try {					
-					PrintWriter output = new PrintWriter(clientConfigFile, charsetName);
-					output.write("ip=" + ip + "\r\nport=" + port + "\r\nusername=" + userName);
-					output.close();
-				} catch (IOException e2) {
-				}
+				saveClientSettings(clientSettings + "isfontbold=" + isFontBold + "\r\nisfontitalic=" + isFontItalic + "\r\nfontcolor=" + fontColor);
+				
 				//connect to server
 				try {
 					@SuppressWarnings("resource")
@@ -317,24 +331,26 @@ public class Chat extends JPanel{
 						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
 						Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 						
+						client = new Client(toServer, fromServer, isFontBold, isFontItalic, fontColor);
+						
 						Chat.this.frame.addWindowListener(new WindowAdapter() {
 							@Override
 							public void windowClosing(WindowEvent e) {
-								int confirm = JOptionPane.showOptionDialog( null, "Are You Sure You Want to Disconnect and Exit?",
+								int confirm = JOptionPane.showOptionDialog( null, "Are you sure you want to disconnect and exit?",
 								"Exit Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 								if (confirm == JOptionPane.YES_OPTION) {
+									Chat.this.saveClientSettings(clientSettings + Chat.this.client.getSettings());
 									System.exit(0);
 								}
 							}
 						});
 						
-						Client client = new Client(toServer, fromServer);
 						jpStart.removeAll();
 						jpStart.setLayout(new BorderLayout());
 						jpStart.add(client, BorderLayout.CENTER);
 						client.setFocus();
 						jpStart.updateUI();
-						
+
 					}					
 				} catch (UnknownHostException e2) {
 					JOptionPane.showMessageDialog(null, "Unknown host: \"" + ip + "\"", "Error", JOptionPane.ERROR_MESSAGE);
@@ -351,6 +367,15 @@ public class Chat extends JPanel{
 		jbtnStartClient.addActionListener(startClientAction);
 		
 		add(jpStart, BorderLayout.CENTER);
+	}
+	
+	public void saveClientSettings(String settings) {
+		try {					
+			PrintWriter output = new PrintWriter(clientConfigFile, charsetName);
+			output.write(settings);
+			output.close();
+		} catch (IOException e2) {
+		}
 	}
 	
 	public static void main(String[] args) {
