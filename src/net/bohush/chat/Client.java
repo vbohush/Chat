@@ -23,7 +23,6 @@ import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -35,7 +34,7 @@ public class Client extends JPanel {
 	DefaultStyledDocument doc = new DefaultStyledDocument();	
 	private JTextPane jtpChat = new JTextPane(doc);
 	
-	private JTextField jtfMessage = new JTextField();
+	private JTextField jtfMessage = new JTextFieldLimit(1024);
 	private JList<String> jlUsers = new JList<>();
 	
 	private JCheckBox jcbBold = new JCheckBox("B");
@@ -53,9 +52,8 @@ public class Client extends JPanel {
 		JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
 		
 		JPanel jpChat = new JPanel(new BorderLayout(5, 5));
-		jtpChat.setEditable(false);		
-		((DefaultCaret) jtpChat.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);	    
-	    JScrollPane jsp = new JScrollPane(jtpChat);
+		jtpChat.setEditable(false);
+		JScrollPane jsp = new JScrollPane(jtpChat);
 	    jsp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         
 
@@ -82,6 +80,7 @@ public class Client extends JPanel {
 	    
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
 		JPanel jpUsers = new JPanel(new BorderLayout(5, 5));
+
 		JScrollPane jspUsers = new JScrollPane(jlUsers);
 		jspUsers.setPreferredSize(new Dimension(150, 150));
 		jpUsers.add(jspUsers, BorderLayout.CENTER);
@@ -111,6 +110,7 @@ public class Client extends JPanel {
 					}
 				}
 				jtfMessage.setFont(jtfMessage.getFont().deriveFont(fontStyle));
+				jtfMessage.requestFocus();
 			}
 		};
 		jcbBold.addActionListener(changeFontStyle);
@@ -132,8 +132,8 @@ public class Client extends JPanel {
 					Client.this.toServer.println(jtfMessage.getText());
 					Client.this.toServer.flush();
 					jtfMessage.setText("");
-					jtfMessage.requestFocus();
 				}
+				jtfMessage.requestFocus();
 			}
 		};
 	    
@@ -199,7 +199,8 @@ public class Client extends JPanel {
 								StyleConstants.setItalic(aset, true);		
 							}
 							doc.insertString(doc.getLength(), message + "\n", aset);
-							
+							jtpChat.setCaretPosition(jtpChat.getDocument().getLength());
+
 						} catch (BadLocationException e) {
 							e.printStackTrace();
 						}

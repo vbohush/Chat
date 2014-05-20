@@ -3,8 +3,6 @@ package net.bohush.chat;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -40,14 +38,7 @@ public class Server extends JPanel implements Runnable {
 		jtaLog.append(new Date() + " Startig Chat Server\n");
 	    JScrollPane jsp = new JScrollPane(jtaLog);
 	    
-		jsp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
-			@Override
-			public void adjustmentValueChanged(AdjustmentEvent e) {
-				e.getAdjustable().setValue(e.getAdjustable().getMaximum());
-			}
-		});
-	    
-	    add(jsp, BorderLayout.CENTER);
+        add(jsp, BorderLayout.CENTER);
 	    
 	    Thread thread = new Thread(this);
 	    thread.start();
@@ -94,6 +85,7 @@ public class Server extends JPanel implements Runnable {
 					synchronized (jtaLog) {
 						jtaLog.append(new Date() + " Disallow connection from  " + socket + ", user name \""+ userName + "\", too many users\n");	
 						jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
+						jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 					}	
 					return;
 				}
@@ -110,6 +102,7 @@ public class Server extends JPanel implements Runnable {
 								clients.remove(this);
 								jtaLog.append(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");	
 								jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
+								jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 							}	
 							return;
 						}
@@ -125,6 +118,7 @@ public class Server extends JPanel implements Runnable {
 				synchronized (jtaLog) {
 					jtaLog.append(timeConnected.getTime().toString() + " Connection from  " + socket + ", user name \""+ userName + "\"\n");
 					jtaLog.append(timeConnected.getTime().toString() + " Clients = " + clients.size() + "\n");
+					jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 				}
 				String userEnteredTime = String.format("[%02d:%02d:%02d]", timeConnected.get(Calendar.HOUR_OF_DAY), timeConnected.get(Calendar.MINUTE), timeConnected.get(Calendar.SECOND));
 				//list of clients
@@ -150,7 +144,8 @@ public class Server extends JPanel implements Runnable {
 					String text = fromClient.nextLine();
 					Calendar time = new GregorianCalendar();
 					synchronized (jtaLog) {
-						jtaLog.append(time.getTime().toString() + " " + userName + ": " + text + "\n");	
+						jtaLog.append(time.getTime().toString() + " " + userName + ": " + text + "\n");
+						jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 					}
 					String messageTime = String.format("[%02d:%02d:%02d]", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE), time.get(Calendar.SECOND));
 					synchronized (clients) {
@@ -168,6 +163,7 @@ public class Server extends JPanel implements Runnable {
 				synchronized (jtaLog) {
 					jtaLog.append(timeLeaved.getTime().toString() + " Disconnect client " + socket + ", user name \""+ userName + "\"\n");
 					jtaLog.append(timeLeaved.getTime().toString() + " Clients = " + clients.size() + "\n");
+					jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 				}
 				String userLeavedTime = String.format("[%02d:%02d:%02d]", timeLeaved.get(Calendar.HOUR_OF_DAY), timeLeaved.get(Calendar.MINUTE), timeLeaved.get(Calendar.SECOND));
 				

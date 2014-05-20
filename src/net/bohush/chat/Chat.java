@@ -77,7 +77,7 @@ public class Chat extends JPanel{
 		}
 		
 		//client config
-		String connectToIP = "127.0.0.1";
+		String connectToIP = "localhost";
 		String connectToPort = "2014";
 		String userName = "User";
 		if(clientConfigFile.exists()) {
@@ -120,13 +120,13 @@ public class Chat extends JPanel{
 		JLabel jlblServerPort = new JLabel("Port Number: ");
 		jlblServerPort.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigServer.add(jlblServerPort);
-		jtfServerPort = new JTextField(serverPort, 7);
+		jtfServerPort = new JTextFieldLimit(serverPort, 7, 5);
 		jpConfigServer.add(jtfServerPort);
 		
 		JLabel jlblServerCount = new JLabel("Max Users Count: ");
 		jlblServerCount.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigServer.add(jlblServerCount);
-		jtfServerCount = new JTextField(maxUsersCount, 7);
+		jtfServerCount = new JTextFieldLimit(maxUsersCount, 7, 5);
 		jpConfigServer.add(jtfServerCount);
 		
 		jpConfigServer.add(new JLabel(" "));
@@ -167,7 +167,7 @@ public class Chat extends JPanel{
 						throw new NumberFormatException();
 					}
 				} catch (NumberFormatException e2) {
-					JOptionPane.showMessageDialog(null, "\"Max Users Count\" must be an integer between 2 and " + Integer.MAX_VALUE, "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "\"Max Users Count\" must be an integer greater than 1", "Error", JOptionPane.ERROR_MESSAGE);
 					jtfServerCount.requestFocus();
 					return;
 				}
@@ -181,12 +181,11 @@ public class Chat extends JPanel{
 				//start server
 				try {
 					ServerSocket serverSocket = new ServerSocket(port);
-									
+
 					Chat.this.frame.setSize(640, 480);
 					Chat.this.frame.setLocationRelativeTo(null);
 					Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", started at port " + port + " with max users count " + maxUsersCount);
 					Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-					
 					Chat.this.frame.addWindowListener(new WindowAdapter() {
 						@Override
 						public void windowClosing(WindowEvent e) {
@@ -198,12 +197,11 @@ public class Chat extends JPanel{
 						}
 					});
 					
+					Server server = new Server(serverSocket, maxUsersCount); 
 					jpStart.removeAll();
-					jpStart.setLayout(new BorderLayout());
-					
-					jpStart.add(new Server(serverSocket, maxUsersCount), BorderLayout.CENTER);
+					jpStart.setLayout(new BorderLayout());					
+					jpStart.add(server, BorderLayout.CENTER);
 					jpStart.updateUI();
-					
 				} catch (IOException e2) {
 					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
@@ -229,13 +227,13 @@ public class Chat extends JPanel{
 		JLabel jlblConnectToPort = new JLabel("Port Number: ");
 		jlblConnectToPort.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigClient.add(jlblConnectToPort);
-		jtfConnectToPort = new JTextField(connectToPort, 7);
+		jtfConnectToPort = new JTextFieldLimit(connectToPort, 7, 5);
 		jpConfigClient.add(jtfConnectToPort);
 		
 		JLabel jlblUserName = new JLabel("User Name: ");
 		jlblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigClient.add(jlblUserName);
-		jtfUserName = new JTextField(userName, 7);
+		jtfUserName = new JTextFieldLimit(userName, 7, 32);
 		jpConfigClient.add(jtfUserName);
 		
 		JPanel jpStartClient = new JPanel(new BorderLayout());
@@ -313,6 +311,7 @@ public class Chat extends JPanel{
 						jtfUserName.requestFocus();
 						return;
 					} else {
+
 						Chat.this.frame.setSize(640, 480);
 						Chat.this.frame.setLocationRelativeTo(null);
 						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
@@ -329,14 +328,12 @@ public class Chat extends JPanel{
 							}
 						});
 						
+						Client client = new Client(toServer, fromServer);
 						jpStart.removeAll();
-						
 						jpStart.setLayout(new BorderLayout());
-						
-						Client client = new Client(toServer, fromServer); 
 						jpStart.add(client, BorderLayout.CENTER);
-						jpStart.updateUI();
 						client.setFocus();
+						jpStart.updateUI();
 						
 					}					
 				} catch (UnknownHostException e2) {
