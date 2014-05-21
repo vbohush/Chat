@@ -163,10 +163,8 @@ public class Server extends JPanel implements Runnable {
 						}
 						synchronized (clients) {
 							for (NewClient newClient : clients) {
-								if(newClient.getUserName().equals(toUser)) {
-									newClient.sendPrivateMessages(fontStyle, messageColor, " " + userName + ": " + text);
-								} else if(newClient.getUserName().equals(userName)) {
-									newClient.sendPrivateMessages(fontStyle, messageColor, " " + userName + ": " + text);
+								if((newClient.getUserName().equals(toUser)) || (newClient.getUserName().equals(userName))) {
+									newClient.sendPrivateMessages(fontStyle, messageColor, " " + userName + " > " + toUser + ": " + text);
 								}
 							}						
 						}

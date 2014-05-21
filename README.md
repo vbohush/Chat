@@ -18,7 +18,7 @@ Optional features:
 
 1. Server should have a log system/gather statistic.
 
-2. Client should be able to send messages to a specific user (private messages).
+2. ~~Client should be able to send messages to a specific user (private messages).~~
 
 3. Support both TCP/UDP mode. Additional bonus for non-server mode: client uses broadcast/multicast for sending messages to other clients.
 
