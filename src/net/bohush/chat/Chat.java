@@ -12,8 +12,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -42,8 +44,8 @@ public class Chat extends JPanel{
 	private JFrame frame;
 	
 	private JPanel jpStart = new JPanel(new GridLayout(1, 2, 5, 5));
-	private File serverConfigFile = new File(this.getClass().getResource("/").getPath() + "Server.txt");
-	private File clientConfigFile = new File(this.getClass().getResource("/").getPath() + "Client.txt");
+	private File serverConfigFile;
+	private File clientConfigFile;
 	static String charsetName = StandardCharsets.UTF_8.name();
 	
 	//nedd for saving client settings
@@ -54,10 +56,23 @@ public class Chat extends JPanel{
 	private Client client;
 	
 	public Chat(JFrame frame)  {
+		this.frame = frame;
+		
+		String serverConfigFileName = this.getClass().getResource("/").getPath() + "Server.txt";
+		String clientConfigFileName = this.getClass().getResource("/").getPath() + "Client.txt";
+		
+		try {
+			serverConfigFile = new File(URLDecoder.decode(serverConfigFileName, charsetName));
+		} catch (UnsupportedEncodingException e3) { }
+		
+		try {
+			clientConfigFile = new File(URLDecoder.decode(clientConfigFileName, charsetName));
+		} catch (UnsupportedEncodingException e3) { }
+
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e1) {}
-		this.frame = frame;
+		
 		//server config
 		String serverPort = "2014";
 		String maxUsersCount = "5";
@@ -375,6 +390,7 @@ public class Chat extends JPanel{
 			output.write(settings);
 			output.close();
 		} catch (IOException e2) {
+			JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
