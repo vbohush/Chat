@@ -18,11 +18,15 @@ import java.util.Scanner;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.SimpleAttributeSet;
 
 public class Server extends JPanel implements Runnable {
 	
 	private static final long serialVersionUID = 1L;
-	private JTextArea jtaLog = new JTextArea();
+	private DefaultStyledDocument doc = new DefaultStyledDocument();
+	private JTextArea jtaLog = new JTextArea(doc);
 	private List<NewClient> clients = Collections.synchronizedList(new ArrayList<NewClient>());
 	private ServerSocket serverSocket;
 	private int maxUsersCount;
@@ -33,7 +37,9 @@ public class Server extends JPanel implements Runnable {
 		setLayout(new BorderLayout());
 		jtaLog.setEditable(false);
 		jtaLog.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
-		jtaLog.append(new Date() + " Startig Chat Server\n");
+		try {
+			doc.insertString(doc.getLength(), new Date() + " Startig Chat Server\n", new SimpleAttributeSet());
+		} catch (BadLocationException e) {}
 	    JScrollPane jsp = new JScrollPane(jtaLog);
 	    
         add(jsp, BorderLayout.CENTER);
@@ -67,6 +73,20 @@ public class Server extends JPanel implements Runnable {
 			thread.start();
 		}
 		
+		private void saveToLog(String logText){
+			synchronized (doc) {
+				try {
+					doc.insertString(doc.getLength(), logText, new SimpleAttributeSet());
+					while(doc.getText(0, doc.getLength()).split("\n").length > 1000) {
+						doc.remove(0, doc.getText(0, doc.getLength()).indexOf("\n") + 1);
+					}
+				} catch (BadLocationException e) {}
+					
+				
+				jtaLog.setCaretPosition(doc.getLength());
+			}
+		}
+		
 		public void run() {
 			try {
 				Scanner fromClient = new Scanner(socket.getInputStream(), Chat.charsetName);
@@ -80,11 +100,7 @@ public class Server extends JPanel implements Runnable {
 					fromClient.close();
 					toClient.close();
 					clients.remove(this);
-					synchronized (jtaLog) {
-						jtaLog.append(new Date() + " Disallow connection from  " + socket + ", user name \""+ userName + "\", too many users\n");	
-						jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
-						jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
-					}	
+					saveToLog(new Date() + " Disallow connection from  " + socket + ", user name \""+ userName + "\", too many users\n");
 					return;
 				}
 				
@@ -96,12 +112,7 @@ public class Server extends JPanel implements Runnable {
 							toClient.flush();
 							fromClient.close();
 							toClient.close();
-							synchronized (jtaLog) {
-								clients.remove(this);
-								jtaLog.append(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");	
-								jtaLog.append(new Date() + " Clients = " + clients.size() + "\n");
-								jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
-							}	
+							saveToLog(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");
 							return;
 						}
 					}						
@@ -113,11 +124,8 @@ public class Server extends JPanel implements Runnable {
 				
 				//tell other clients about new user
 				Date timeConnected = new Date();
-				synchronized (jtaLog) {
-					jtaLog.append(timeConnected + " Connection from  " + socket + ", user name \""+ userName + "\"\n");
-					jtaLog.append(timeConnected + " Clients = " + clients.size() + "\n");
-					jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
-				}
+				saveToLog(timeConnected + " Connection from  " + socket + ", user name \""+ userName + "\"\n" + timeConnected + " Clients = " + clients.size() + "\n");
+
 
 				//list of clients
 				StringBuilder users = new StringBuilder();
@@ -142,10 +150,9 @@ public class Server extends JPanel implements Runnable {
 						String fontStyle = fromClient.nextLine();
 						String messageColor = fromClient.nextLine();
 						String text = fromClient.nextLine();
-						synchronized (jtaLog) {
-							jtaLog.append(new Date() + " " + userName + ": " + text + "\n");
-							jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
-						}
+
+						saveToLog(new Date() + " " + userName + ": " + text + "\n");
+
 						synchronized (clients) {
 							for (NewClient newClient : clients) {
 								newClient.sendMessages(fontStyle, messageColor, " " + userName + ": " + text);
@@ -157,10 +164,7 @@ public class Server extends JPanel implements Runnable {
 						String fontStyle = fromClient.nextLine();
 						String messageColor = fromClient.nextLine();
 						String text = fromClient.nextLine();
-						synchronized (jtaLog) {
-							jtaLog.append(new Date() + " private message from " + userName + " to " + toUser + "\n");
-							jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
-						}
+						saveToLog(new Date() + " private message from " + userName + " to " + toUser + "\n");
 						synchronized (clients) {
 							for (NewClient newClient : clients) {
 								if((newClient.getUserName().equals(toUser)) || (newClient.getUserName().equals(userName))) {
@@ -177,11 +181,7 @@ public class Server extends JPanel implements Runnable {
 				//disconnect
 				clients.remove(this);
 				Date timeLeaved = new Date();
-				synchronized (jtaLog) {
-					jtaLog.append(timeLeaved + " Disconnect client " + socket + ", user name \""+ userName + "\"\n");
-					jtaLog.append(timeLeaved + " Clients = " + clients.size() + "\n");
-					jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
-				}
+				saveToLog(timeLeaved + " Disconnect client " + socket + ", user name \""+ userName + "\"\n" + timeLeaved + " Clients = " + clients.size() + "\n");
 				
 				//list of clients
 				StringBuilder users = new StringBuilder();

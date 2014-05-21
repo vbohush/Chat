@@ -33,7 +33,7 @@ public class Client extends JPanel {
 	
 	private static final long serialVersionUID = 1L;
 	
-	DefaultStyledDocument doc = new DefaultStyledDocument();	
+	private DefaultStyledDocument doc = new DefaultStyledDocument();	
 	private JTextPane jtpChat = new JTextPane(doc);
 	
 	private JTextField jtfMessage = new JTextFieldLimit(1024);
@@ -273,9 +273,16 @@ public class Client extends JPanel {
 								StyleConstants.setBold(aset, true);	
 								StyleConstants.setItalic(aset, true);		
 							}
-							doc.insertString(doc.getLength(), message + " \n", aset);
-							jtpChat.setCaretPosition(jtpChat.getDocument().getLength());
 
+							doc.insertString(doc.getLength(), message + " \n", aset);
+							//limit lines count in chat
+							String text = doc.getText(0, doc.getLength()); 
+							if(text.split("\n").length > 200) {
+								doc.remove(0, text.indexOf("\n") + 1);
+							}
+							
+							jtpChat.setCaretPosition(doc.getLength());
+							
 						} catch (BadLocationException e) {
 							e.printStackTrace();
 						}
@@ -283,9 +290,26 @@ public class Client extends JPanel {
 					} else if(command.equals("2")) { //list of clients
 						int usersCount = Integer.parseInt(fromServer.nextLine());
 						String[] users = new String[usersCount];
+						
 						for (int i = 0; i < users.length; i++) {
 							users[i] = fromServer.nextLine();
+							
 						}
+						//check if private message user is online
+						if(jlblToUser.isVisible()) {
+							boolean isUserOnline = false;
+							for (int i = 0; i < users.length; i++) {
+								if(("> " + users[i]).equals(jlblToUser.getText())) {
+									isUserOnline = true;
+									break;
+								};
+							}
+							if(!isUserOnline) {
+								jlblToUser.setText("");
+								jlblToUser.setVisible(false);
+							}
+						}
+						
 						jlUsers.setData(users);						
 					}
 				}

@@ -68,8 +68,8 @@ public class Chat extends JPanel{
 		
 		this.frame = frame;
 		
-		String serverConfigFileName = this.getClass().getResource("/").getPath() + "Server.txt";
-		String clientConfigFileName = this.getClass().getResource("/").getPath() + "Client.txt";
+		String serverConfigFileName = this.getClass().getResource("/").getPath() + "server.txt";
+		String clientConfigFileName = this.getClass().getResource("/").getPath() + "client.txt";
 		
 		try {
 			serverConfigFile = new File(URLDecoder.decode(serverConfigFileName, charsetName));
