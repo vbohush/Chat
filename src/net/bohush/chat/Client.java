@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -35,7 +37,7 @@ public class Client extends JPanel {
 	private JTextPane jtpChat = new JTextPane(doc);
 	
 	private JTextField jtfMessage = new JTextFieldLimit(1024);
-	private JList<String> jlUsers = new JList<>();
+	private JList<String> jlUsers = new JList<String>();
 	
 	private JCheckBox jcbBold = new JCheckBox("B");
 	private JCheckBox jcbItalic = new JCheckBox("I");
@@ -200,29 +202,18 @@ public class Client extends JPanel {
 					String command = fromServer.nextLine();
 					if(command.equals("1")) { //new message
 						
-						int timeFontStyle = Integer.parseInt(fromServer.nextLine());
-						Color TimeColor = new Color(Integer.parseInt(fromServer.nextLine()));
-						String time = fromServer.nextLine();
+						Calendar messageTime = new GregorianCalendar();
+						String time = String.format("[%02d:%02d:%02d]", messageTime.get(Calendar.HOUR_OF_DAY), messageTime.get(Calendar.MINUTE), messageTime.get(Calendar.SECOND));
+						
 						int messageFontStyle = Integer.parseInt(fromServer.nextLine());
-						Color messageColor = new Color(Integer.parseInt(fromServer.nextLine()));;
+						Color messageColor = new Color(Integer.parseInt(fromServer.nextLine()));
 						String message = fromServer.nextLine();
 						
 						try {
 							SimpleAttributeSet aset = new SimpleAttributeSet();
-							StyleConstants.setForeground(aset, TimeColor);
-							if(timeFontStyle == Font.PLAIN) {
-								StyleConstants.setBold(aset, false);	
-								StyleConstants.setItalic(aset, false);							
-							} else if(timeFontStyle == Font.BOLD) {
-								StyleConstants.setBold(aset, true);	
-								StyleConstants.setItalic(aset, false);
-							} else if(timeFontStyle == Font.ITALIC) {
-								StyleConstants.setBold(aset, false);	
-								StyleConstants.setItalic(aset, true);		
-							} else if(timeFontStyle == Font.BOLD + Font.ITALIC) {
-								StyleConstants.setBold(aset, true);	
-								StyleConstants.setItalic(aset, true);		
-							}
+							StyleConstants.setForeground(aset, Color.GRAY);
+							StyleConstants.setBold(aset, true);	
+							StyleConstants.setItalic(aset, false);
 							doc.insertString(doc.getLength(), time, aset);
 							
 							aset = new SimpleAttributeSet();

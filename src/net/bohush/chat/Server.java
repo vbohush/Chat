@@ -114,13 +114,13 @@ public class Server extends JPanel implements Runnable {
 				toClient.flush();
 				
 				//tell other clients about new user
-				Calendar timeConnected = new GregorianCalendar();
+				Date timeConnected = new Date();
 				synchronized (jtaLog) {
-					jtaLog.append(timeConnected.getTime().toString() + " Connection from  " + socket + ", user name \""+ userName + "\"\n");
-					jtaLog.append(timeConnected.getTime().toString() + " Clients = " + clients.size() + "\n");
+					jtaLog.append(timeConnected + " Connection from  " + socket + ", user name \""+ userName + "\"\n");
+					jtaLog.append(timeConnected + " Clients = " + clients.size() + "\n");
 					jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 				}
-				String userEnteredTime = String.format("[%02d:%02d:%02d]", timeConnected.get(Calendar.HOUR_OF_DAY), timeConnected.get(Calendar.MINUTE), timeConnected.get(Calendar.SECOND));
+
 				//list of clients
 				StringBuilder users = new StringBuilder();
 				synchronized (clients) {
@@ -131,7 +131,7 @@ public class Server extends JPanel implements Runnable {
 				//send clients names
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
-						newClient.sendMessages(userEnteredTime, " -= " + userName + " entered the chat =-");
+						newClient.sendMessages(" -= " + userName + " entered the chat =-");
 						newClient.sendClients(clients.size(), users.toString());
 					}						
 				}
@@ -142,15 +142,13 @@ public class Server extends JPanel implements Runnable {
 					String messageColor = fromClient.nextLine();
 
 					String text = fromClient.nextLine();
-					Calendar time = new GregorianCalendar();
 					synchronized (jtaLog) {
-						jtaLog.append(time.getTime().toString() + " " + userName + ": " + text + "\n");
+						jtaLog.append(new Date() + " " + userName + ": " + text + "\n");
 						jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 					}
-					String messageTime = String.format("[%02d:%02d:%02d]", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE), time.get(Calendar.SECOND));
 					synchronized (clients) {
 						for (NewClient newClient : clients) {
-							newClient.sendMessages(messageTime, fontStyle, messageColor, " " + userName + ": " + text);
+							newClient.sendMessages(fontStyle, messageColor, " " + userName + ": " + text);
 						}						
 					}
 				}
@@ -159,13 +157,12 @@ public class Server extends JPanel implements Runnable {
 			} catch (NoSuchElementException e) {
 				//disconnect
 				clients.remove(this);
-				Calendar timeLeaved = new GregorianCalendar();
+				Date timeLeaved = new Date();
 				synchronized (jtaLog) {
-					jtaLog.append(timeLeaved.getTime().toString() + " Disconnect client " + socket + ", user name \""+ userName + "\"\n");
-					jtaLog.append(timeLeaved.getTime().toString() + " Clients = " + clients.size() + "\n");
+					jtaLog.append(timeLeaved + " Disconnect client " + socket + ", user name \""+ userName + "\"\n");
+					jtaLog.append(timeLeaved + " Clients = " + clients.size() + "\n");
 					jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
 				}
-				String userLeavedTime = String.format("[%02d:%02d:%02d]", timeLeaved.get(Calendar.HOUR_OF_DAY), timeLeaved.get(Calendar.MINUTE), timeLeaved.get(Calendar.SECOND));
 				
 				//list of clients
 				StringBuilder users = new StringBuilder();
@@ -177,7 +174,7 @@ public class Server extends JPanel implements Runnable {
 				
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
-						newClient.sendMessages(userLeavedTime, " -= " + userName + " leaved the chat =-");
+						newClient.sendMessages(" -= " + userName + " leaved the chat =-");
 						newClient.sendClients(clients.size(), users.toString());
 					}						
 				}
@@ -195,24 +192,15 @@ public class Server extends JPanel implements Runnable {
 			toClient.println(text);
 			toClient.flush();
 		}
-		
-		public void sendMessages(String time, String messageFontStyle, String messageColor, String message) {
-			String timeFontStyle = Font.BOLD + "";
-			String TimeColor = Color.GRAY.getRGB() + "";
-			sendMessages(timeFontStyle, TimeColor, time, messageFontStyle, messageColor, message);
+
+		public void sendMessages(String message) {
+			String messageFontStyle = Font.BOLD + "";
+			String messageColor = Color.GRAY.getRGB() + "";
+			sendMessages(messageFontStyle, messageColor, message);
 		}
 		
-		public void sendMessages(String time, String message) {
-			String timeFontStyle = Font.BOLD + "";
-			String TimeColor = Color.GRAY.getRGB() + "";
-			sendMessages(timeFontStyle, TimeColor, time, timeFontStyle, TimeColor, message);
-		}
-		
-		public void sendMessages(String timeFontStyle, String TimeColor, String time, String messageFontStyle, String messageColor, String message) {
+		public void sendMessages(String messageFontStyle, String messageColor, String message) {
 			toClient.println("1");
-			toClient.println(timeFontStyle);
-			toClient.println(TimeColor);
-			toClient.println(time);
 			toClient.println(messageFontStyle);
 			toClient.println(messageColor);
 			toClient.println(message);

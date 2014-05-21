@@ -71,7 +71,11 @@ public class Chat extends JPanel{
 
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e1) {}
+		} catch (ClassNotFoundException e1) {			
+		} catch (InstantiationException e1) {
+		} catch (IllegalAccessException e1) {
+		} catch (UnsupportedLookAndFeelException e1) {
+		}
 		
 		//server config
 		String serverPort = "2014";
@@ -80,7 +84,7 @@ public class Chat extends JPanel{
 			Scanner serverInput;
 			try {
 				serverInput = new Scanner(serverConfigFile, charsetName);
-				HashMap<String, String> configs = new HashMap<>();
+				HashMap<String, String> configs = new HashMap<String, String>();
 				while(serverInput.hasNextLine()) {
 					String nextLine = serverInput.nextLine();
 					String[] params = nextLine.split("=");
@@ -107,7 +111,7 @@ public class Chat extends JPanel{
 			Scanner clientInput;
 			try {
 				clientInput = new Scanner(clientConfigFile, charsetName);
-				HashMap<String, String> configs = new HashMap<>();
+				HashMap<String, String> configs = new HashMap<String, String>();
 				while(clientInput.hasNextLine()) {
 					String nextLine = clientInput.nextLine();
 					String[] params = nextLine.split("=");
@@ -352,7 +356,7 @@ public class Chat extends JPanel{
 							@Override
 							public void windowClosing(WindowEvent e) {
 								int confirm = JOptionPane.showOptionDialog( null, "Are you sure you want to disconnect and exit?",
-								"Exit Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+								"Exit confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 								if (confirm == JOptionPane.YES_OPTION) {
 									Chat.this.saveClientSettings(clientSettings + Chat.this.client.getSettings());
 									System.exit(0);
