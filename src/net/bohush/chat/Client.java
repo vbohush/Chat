@@ -17,7 +17,6 @@ import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -37,7 +36,7 @@ public class Client extends JPanel {
 	private JTextPane jtpChat = new JTextPane(doc);
 	
 	private JTextField jtfMessage = new JTextFieldLimit(1024);
-	private JList<String> jlUsers = new JList<String>();
+	private UserList jlUsers = new UserList();
 	
 	private JCheckBox jcbBold = new JCheckBox("B");
 	private JCheckBox jcbItalic = new JCheckBox("I");
@@ -244,7 +243,7 @@ public class Client extends JPanel {
 						for (int i = 0; i < users.length; i++) {
 							users[i] = fromServer.nextLine();
 						}
-						jlUsers.setListData(users);						
+						jlUsers.setData(users);						
 					}
 				}
 			} catch (NoSuchElementException e) {
