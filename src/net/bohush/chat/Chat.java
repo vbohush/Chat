@@ -56,6 +56,16 @@ public class Chat extends JPanel{
 	private Client client;
 	
 	public Chat(JFrame frame)  {
+		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException e1) {			
+		} catch (InstantiationException e1) {
+		} catch (IllegalAccessException e1) {
+		} catch (UnsupportedLookAndFeelException e1) {
+		}
+		
+		
 		this.frame = frame;
 		
 		String serverConfigFileName = this.getClass().getResource("/").getPath() + "Server.txt";
@@ -69,14 +79,6 @@ public class Chat extends JPanel{
 			clientConfigFile = new File(URLDecoder.decode(clientConfigFileName, charsetName));
 		} catch (UnsupportedEncodingException e3) { }
 
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException e1) {			
-		} catch (InstantiationException e1) {
-		} catch (IllegalAccessException e1) {
-		} catch (UnsupportedLookAndFeelException e1) {
-		}
-		
 		//server config
 		String serverPort = "2014";
 		String maxUsersCount = "5";

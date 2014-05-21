@@ -136,19 +136,42 @@ public class Server extends JPanel implements Runnable {
 		
 				//accept new messages from client
 				while(true) {
-					String fontStyle = fromClient.nextLine();
-					String messageColor = fromClient.nextLine();
+					String command = fromClient.nextLine();
+					//to all users
+					if(command.equals("1")) {
+						String fontStyle = fromClient.nextLine();
+						String messageColor = fromClient.nextLine();
+						String text = fromClient.nextLine();
+						synchronized (jtaLog) {
+							jtaLog.append(new Date() + " " + userName + ": " + text + "\n");
+							jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
+						}
+						synchronized (clients) {
+							for (NewClient newClient : clients) {
+								newClient.sendMessages(fontStyle, messageColor, " " + userName + ": " + text);
+							}						
+						}
+					//private message
+					} else {
+						String toUser = fromClient.nextLine();
+						String fontStyle = fromClient.nextLine();
+						String messageColor = fromClient.nextLine();
+						String text = fromClient.nextLine();
+						synchronized (jtaLog) {
+							jtaLog.append(new Date() + " private message from " + userName + " to " + toUser + "\n");
+							jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
+						}
+						synchronized (clients) {
+							for (NewClient newClient : clients) {
+								if(newClient.getUserName().equals(toUser)) {
+									newClient.sendPrivateMessages(fontStyle, messageColor, " " + userName + ": " + text);
+								} else if(newClient.getUserName().equals(userName)) {
+									newClient.sendPrivateMessages(fontStyle, messageColor, " " + userName + ": " + text);
+								}
+							}						
+						}
+					}
 
-					String text = fromClient.nextLine();
-					synchronized (jtaLog) {
-						jtaLog.append(new Date() + " " + userName + ": " + text + "\n");
-						jtaLog.setCaretPosition(jtaLog.getDocument().getLength());
-					}
-					synchronized (clients) {
-						for (NewClient newClient : clients) {
-							newClient.sendMessages(fontStyle, messageColor, " " + userName + ": " + text);
-						}						
-					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -205,6 +228,13 @@ public class Server extends JPanel implements Runnable {
 			toClient.flush();
 		}
 		
+		public void sendPrivateMessages(String messageFontStyle, String messageColor, String message) {
+			toClient.println("3");
+			toClient.println(messageFontStyle);
+			toClient.println(messageColor);
+			toClient.println(message);
+			toClient.flush();
+		}
 	}
 
 }

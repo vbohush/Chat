@@ -17,6 +17,7 @@ import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -36,7 +37,8 @@ public class Client extends JPanel {
 	private JTextPane jtpChat = new JTextPane(doc);
 	
 	private JTextField jtfMessage = new JTextFieldLimit(1024);
-	private UserList jlUsers = new UserList();
+	private JLabel jlblToUser = new JLabel("");
+	private UserList jlUsers = new UserList(this);
 	
 	private JCheckBox jcbBold = new JCheckBox("B");
 	private JCheckBox jcbItalic = new JCheckBox("I");
@@ -58,6 +60,7 @@ public class Client extends JPanel {
 		
 		JPanel jpChat = new JPanel(new BorderLayout(5, 5));
 		jtpChat.setEditable(false);
+		jtpChat.setBackground(Color.WHITE);
 		JScrollPane jsp = new JScrollPane(jtpChat);
 	    jsp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         
@@ -68,9 +71,19 @@ public class Client extends JPanel {
 	    
 		
 	    JPanel jpMessage = new JPanel(new BorderLayout(5, 5));
-	    jpMessage.setBorder(new EmptyBorder(0, 5, 0, 5));	    
+	    jpMessage.setBorder(new EmptyBorder(0, 5, 0, 5));
 	    jpMessage.add(jtfMessage, BorderLayout.CENTER);
 	    
+	    jlblToUser.setVisible(false);
+	    jpMessage.add(jlblToUser, BorderLayout.WEST);
+	    jlblToUser.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				jlblToUser.setText("");
+				jlblToUser.setVisible(false);
+			}
+		});
+
 	    JPanel jpMessageOptions = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
 	    jcbBold.setFont(jcbBold.getFont().deriveFont(Font.BOLD));
 	    jcbItalic.setFont(jcbItalic.getFont().deriveFont(Font.ITALIC));
@@ -132,11 +145,22 @@ public class Client extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!jtfMessage.getText().equals("")) {
-					Client.this.toServer.println(fontStyle + "");
-					Client.this.toServer.println(colorPanel.getColor().getRGB());
-					Client.this.toServer.println(jtfMessage.getText());
-					Client.this.toServer.flush();
-					jtfMessage.setText("");
+					if(jlblToUser.isVisible()) {
+						Client.this.toServer.println("2");
+						Client.this.toServer.println(jlblToUser.getText().substring(2));
+						Client.this.toServer.println(fontStyle + "");
+						Client.this.toServer.println(colorPanel.getColor().getRGB());
+						Client.this.toServer.println(jtfMessage.getText());
+						Client.this.toServer.flush();
+						jtfMessage.setText("");
+					} else {
+						Client.this.toServer.println("1");
+						Client.this.toServer.println(fontStyle + "");
+						Client.this.toServer.println(colorPanel.getColor().getRGB());
+						Client.this.toServer.println(jtfMessage.getText());
+						Client.this.toServer.flush();
+						jtfMessage.setText("");
+					}
 				}
 				jtfMessage.requestFocus();
 			}
@@ -189,6 +213,17 @@ public class Client extends JPanel {
 		jtfMessage.requestFocus();
 	}
 	
+	public void setPmUser(String userName) {
+		if(jlblToUser.getText().equals("> " + userName)) {
+			jlblToUser.setText("");
+			jlblToUser.setVisible(false);
+		} else {
+			jlblToUser.setText("> " + userName);
+			jlblToUser.setVisible(true);			
+		}
+		jtfMessage.requestFocus();
+	}
+	
 	//receive messages and users list
 	class ReceiveMessage implements Runnable {
 		public ReceiveMessage() {
@@ -199,7 +234,7 @@ public class Client extends JPanel {
 			try {
 				while(true) {
 					String command = fromServer.nextLine();
-					if(command.equals("1")) { //new message
+					if((command.equals("1")) || (command.equals("3"))) { //new message
 						
 						Calendar messageTime = new GregorianCalendar();
 						String time = String.format("[%02d:%02d:%02d]", messageTime.get(Calendar.HOUR_OF_DAY), messageTime.get(Calendar.MINUTE), messageTime.get(Calendar.SECOND));
@@ -209,13 +244,21 @@ public class Client extends JPanel {
 						String message = fromServer.nextLine();
 						
 						try {
+							Color privateMessageColor = new Color(217, 217, 217);
+							
 							SimpleAttributeSet aset = new SimpleAttributeSet();
+							if(command.equals("3")) {
+								StyleConstants.setBackground(aset, privateMessageColor);
+							}							
 							StyleConstants.setForeground(aset, Color.GRAY);
 							StyleConstants.setBold(aset, true);	
 							StyleConstants.setItalic(aset, false);
 							doc.insertString(doc.getLength(), time, aset);
 							
 							aset = new SimpleAttributeSet();
+							if(command.equals("3")) {
+								StyleConstants.setBackground(aset, privateMessageColor);
+							}							
 							StyleConstants.setForeground(aset, messageColor);
 							if(messageFontStyle == Font.PLAIN) {
 								StyleConstants.setBold(aset, false);	
@@ -230,7 +273,7 @@ public class Client extends JPanel {
 								StyleConstants.setBold(aset, true);	
 								StyleConstants.setItalic(aset, true);		
 							}
-							doc.insertString(doc.getLength(), message + "\n", aset);
+							doc.insertString(doc.getLength(), message + " \n", aset);
 							jtpChat.setCaretPosition(jtpChat.getDocument().getLength());
 
 						} catch (BadLocationException e) {
