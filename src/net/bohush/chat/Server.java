@@ -35,7 +35,6 @@ public class Server extends JPanel implements Runnable {
 	
 	public Server(Map<String, String> admins, ServerSocket serverSocket, int maxUsersCount) {
 		this.admins = admins;
-		System.out.println(admins);
 		this.serverSocket = serverSocket;
 		this.maxUsersCount = maxUsersCount;
 		setLayout(new BorderLayout());
@@ -113,7 +112,7 @@ public class Server extends JPanel implements Runnable {
 				userName = fromClient.nextLine();
 				
 				//check max users count
-				if(clients.size() > maxUsersCount) {
+				if(clients.size() >= maxUsersCount) {
 					toClient.println("2");
 					toClient.flush();
 					fromClient.close();
@@ -123,21 +122,37 @@ public class Server extends JPanel implements Runnable {
 				}
 				
 				//check duplicate user name
-				synchronized (clients) {
-					if(clients.contains(this)) {
+				if(clients.contains(this)) {
+					toClient.println("1");
+					toClient.flush();
+					fromClient.close();
+					toClient.close();
+					saveToLog(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");
+					return;
+				}						
+				
+				if(admins.containsKey(userName.toLowerCase())) {
+					toClient.println("3");
+					toClient.flush();
+					String password = fromClient.nextLine();
+					if(password.equals(admins.get(userName).toLowerCase())) {
+						toClient.println("0");
+						toClient.flush();		
+					} else {
 						toClient.println("1");
 						toClient.flush();
 						fromClient.close();
 						toClient.close();
-						saveToLog(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");
-					}						
+						saveToLog(new Date() + " Disallow connection from  " + socket + ", wrong password from \""+ userName + "\"\n");
+						return;
+					}
+				} else {
+					toClient.println("0");
+					toClient.flush();
 				}
-				
-				
-				//Ok, connect
+
+				//Ok, connected
 				clients.add(this);
-				toClient.println("0");
-				toClient.flush();
 				
 				//tell other clients about new user
 				Date timeConnected = new Date();

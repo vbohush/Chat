@@ -56,7 +56,7 @@ public class Chat extends JPanel{
 	private String clientSettings = "";
 	private Client client;
 	//need for saving server settings
-	private String stringAdmins;
+	private String stringAdmins = "";
 	private Map<String, String> admins = new HashMap<String, String>();
 	
 	public Chat(JFrame frame)  {
@@ -112,12 +112,16 @@ public class Chat extends JPanel{
 					for (int i = 0; i < adminCount; i++) {
 						String[] oneAdmin = adminsWithPass[i].split(":");
 						if(oneAdmin.length == 2) {
-							admins.put(oneAdmin[0], oneAdmin[1]);
+							admins.put(oneAdmin[0].toLowerCase(), oneAdmin[1]);
 						}						
 					}
 				}
 			} catch (IOException e) {
 			}
+		} else {
+			stringAdmins = "admin:chatpass,viktor:12345678";
+			admins.put("admin", "chatpass");
+			admins.put("viktor", "12345678");
 		}
 		
 		//client config
@@ -361,7 +365,23 @@ public class Chat extends JPanel{
 						jtfUserName.requestFocus();
 						return;
 					} else {
-
+						if(answer.equals("3")) {
+							String password = JOptionPane.showInputDialog(null, "Enter your passwrod", "Admin login", JOptionPane.QUESTION_MESSAGE);
+							if(password == null) {
+								password = "";
+							}
+							toServer.println(password);
+							toServer.flush();
+							String allow = fromServer.nextLine();
+							if(allow.equals("1")) {
+								JOptionPane.showMessageDialog(null, "Wrong password", "Error", JOptionPane.ERROR_MESSAGE);
+								toServer.close();
+								fromServer.close();
+								socket.close();
+								jtfUserName.requestFocus();
+								return;
+							}
+						}
 						Chat.this.frame.setSize(640, 480);
 						Chat.this.frame.setLocationRelativeTo(null);
 						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
