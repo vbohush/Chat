@@ -8,13 +8,13 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -28,7 +28,7 @@ public class Server extends JPanel implements Runnable {
 	private static final long serialVersionUID = 1L;
 	private DefaultStyledDocument doc = new DefaultStyledDocument();
 	private JTextArea jtaLog = new JTextArea(doc);
-	private List<NewClient> clients = Collections.synchronizedList(new ArrayList<NewClient>());
+	private Set<NewClient> clients = Collections.synchronizedSet(new HashSet<NewClient>());
 	private ServerSocket serverSocket;
 	private int maxUsersCount;
 	private Map<String, String> admins;
@@ -76,6 +76,22 @@ public class Server extends JPanel implements Runnable {
 			thread.start();
 		}
 		
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NewClient) {
+				NewClient that = (NewClient)obj;
+				return this.userName.toLowerCase().equals(that.userName.toLowerCase());
+			} else {
+				return false;
+			}
+		}
+		
+		@Override
+		public int hashCode() {
+			return userName.hashCode();
+		}
+		
 		private void saveToLog(String logText){
 			synchronized (doc) {
 				try {
@@ -108,15 +124,12 @@ public class Server extends JPanel implements Runnable {
 				
 				//check duplicate user name
 				synchronized (clients) {
-					for (NewClient newClient : clients) {
-						if(newClient.getUserName().toLowerCase().equals(userName.toLowerCase())) {
-							toClient.println("1");
-							toClient.flush();
-							fromClient.close();
-							toClient.close();
-							saveToLog(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");
-							return;
-						}
+					if(clients.contains(this)) {
+						toClient.println("1");
+						toClient.flush();
+						fromClient.close();
+						toClient.close();
+						saveToLog(new Date() + " Disallow connection from  " + socket + ", duplicate user name \""+ userName + "\"\n");
 					}						
 				}
 				
