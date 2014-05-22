@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -30,8 +31,11 @@ public class Server extends JPanel implements Runnable {
 	private List<NewClient> clients = Collections.synchronizedList(new ArrayList<NewClient>());
 	private ServerSocket serverSocket;
 	private int maxUsersCount;
+	private Map<String, String> admins;
 	
-	public Server(ServerSocket serverSocket, int maxUsersCount) {
+	public Server(Map<String, String> admins, ServerSocket serverSocket, int maxUsersCount) {
+		this.admins = admins;
+		System.out.println(admins);
 		this.serverSocket = serverSocket;
 		this.maxUsersCount = maxUsersCount;
 		setLayout(new BorderLayout());
@@ -105,7 +109,7 @@ public class Server extends JPanel implements Runnable {
 				//check duplicate user name
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
-						if((newClient !=  this)&&(newClient.getUserName().equals(userName))) {
+						if(newClient.getUserName().toLowerCase().equals(userName.toLowerCase())) {
 							toClient.println("1");
 							toClient.flush();
 							fromClient.close();

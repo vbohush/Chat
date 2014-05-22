@@ -19,6 +19,7 @@ import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.swing.JButton;
@@ -48,12 +49,15 @@ public class Chat extends JPanel{
 	private File clientConfigFile;
 	static String charsetName = StandardCharsets.UTF_8.name();
 	
-	//nedd for saving client settings
+	//need for saving client settings
 	private String isFontBold = "n";
 	private String isFontItalic = "n";
 	private String fontColor = Color.BLACK.getRGB() + "";
 	private String clientSettings = "";
 	private Client client;
+	//need for saving server settings
+	private String stringAdmins;
+	private Map<String, String> admins = new HashMap<String, String>();
 	
 	public Chat(JFrame frame)  {
 		
@@ -100,6 +104,17 @@ public class Chat extends JPanel{
 				}
 				if(configs.get("maxuserscount") != null) {
 					maxUsersCount = configs.get("maxuserscount");
+				}
+				if(configs.get("admins") != null) {
+					stringAdmins = configs.get("admins");
+					String[] adminsWithPass = stringAdmins.split(",");
+					int adminCount = adminsWithPass.length;
+					for (int i = 0; i < adminCount; i++) {
+						String[] oneAdmin = adminsWithPass[i].split(":");
+						if(oneAdmin.length == 2) {
+							admins.put(oneAdmin[0], oneAdmin[1]);
+						}						
+					}
 				}
 			} catch (IOException e) {
 			}
@@ -212,7 +227,7 @@ public class Chat extends JPanel{
 				//safe settings
 				try {					
 					PrintWriter output = new PrintWriter(serverConfigFile, charsetName);
-					output.write("port=" + port + "\r\nmaxuserscount=" + maxUsersCount);
+					output.write("port=" + port + "\r\nmaxuserscount=" + maxUsersCount + "\r\nadmins=" + stringAdmins);
 					output.close();
 				} catch (IOException e2) {
 				}
@@ -235,7 +250,7 @@ public class Chat extends JPanel{
 						}
 					});
 					
-					Server server = new Server(serverSocket, maxUsersCount); 
+					Server server = new Server(Chat.this.admins, serverSocket, maxUsersCount); 
 					jpStart.removeAll();
 					jpStart.setLayout(new BorderLayout());					
 					jpStart.add(server, BorderLayout.CENTER);
