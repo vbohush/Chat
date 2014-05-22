@@ -54,8 +54,7 @@ public class Server extends JPanel implements Runnable {
 		try {
 			while(true) {
 				Socket socket = serverSocket.accept();
-				NewClient newClient = new NewClient(socket);
-				clients.add(newClient);
+				new NewClient(socket);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -99,7 +98,6 @@ public class Server extends JPanel implements Runnable {
 					toClient.flush();
 					fromClient.close();
 					toClient.close();
-					clients.remove(this);
 					saveToLog(new Date() + " Disallow connection from  " + socket + ", user name \""+ userName + "\", too many users\n");
 					return;
 				}
@@ -118,7 +116,9 @@ public class Server extends JPanel implements Runnable {
 					}						
 				}
 				
+				
 				//Ok, connect
+				clients.add(this);
 				toClient.println("0");
 				toClient.flush();
 				
