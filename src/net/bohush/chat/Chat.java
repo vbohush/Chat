@@ -55,6 +55,8 @@ public class Chat extends JPanel{
 	private String fontColor = Color.BLACK.getRGB() + "";
 	private String clientSettings = "";
 	private Client client;
+	
+	private boolean isAdmin = false;
 	//need for saving server settings
 	private String stringAdmins = "";
 	private Map<String, String> admins = new HashMap<String, String>();
@@ -380,6 +382,8 @@ public class Chat extends JPanel{
 								socket.close();
 								jtfUserName.requestFocus();
 								return;
+							} else {
+								isAdmin = true;
 							}
 						}
 						Chat.this.frame.setSize(640, 480);
@@ -387,7 +391,7 @@ public class Chat extends JPanel{
 						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
 						Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 						
-						client = new Client(toServer, fromServer, isFontBold, isFontItalic, fontColor);
+						client = new Client(toServer, fromServer, isFontBold, isFontItalic, fontColor, isAdmin);
 						
 						Chat.this.frame.addWindowListener(new WindowAdapter() {
 							@Override

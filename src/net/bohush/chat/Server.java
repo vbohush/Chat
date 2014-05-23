@@ -10,11 +10,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -28,7 +28,7 @@ public class Server extends JPanel implements Runnable {
 	private static final long serialVersionUID = 1L;
 	private DefaultStyledDocument doc = new DefaultStyledDocument();
 	private JTextArea jtaLog = new JTextArea(doc);
-	private Set<NewClient> clients = Collections.synchronizedSet(new HashSet<NewClient>());
+	private Set<NewClient> clients = Collections.synchronizedSet(new TreeSet<NewClient>());
 	private ServerSocket serverSocket;
 	private int maxUsersCount;
 	private Map<String, String> admins;
@@ -64,9 +64,10 @@ public class Server extends JPanel implements Runnable {
 		}
 	}
 	
-	class NewClient implements Runnable {
+	class NewClient implements Runnable, Comparable<NewClient>  {
 		private Socket socket;
 		private String userName = "";
+		private String ip = "";
 		private PrintWriter toClient;
 		
 		public NewClient(Socket socket) {
@@ -75,6 +76,10 @@ public class Server extends JPanel implements Runnable {
 			thread.start();
 		}
 		
+		@Override
+		public int compareTo(NewClient o) {
+			return this.userName.compareTo(o.userName);
+		}
 		
 		@Override
 		public boolean equals(Object obj) {
@@ -85,6 +90,8 @@ public class Server extends JPanel implements Runnable {
 				return false;
 			}
 		}
+		
+		
 		
 		@Override
 		public int hashCode() {
@@ -110,6 +117,7 @@ public class Server extends JPanel implements Runnable {
 				Scanner fromClient = new Scanner(socket.getInputStream(), Chat.charsetName);
 				toClient = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), Chat.charsetName));
 				userName = fromClient.nextLine();
+				ip = socket.getInetAddress().getHostAddress();
 				
 				//check max users count
 				if(clients.size() >= maxUsersCount) {
@@ -164,6 +172,7 @@ public class Server extends JPanel implements Runnable {
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
 						users.append(newClient.getUserName() + "\n");
+						users.append(newClient.getIp() + "\n");
 					}						
 				}
 				//send clients names
@@ -220,6 +229,7 @@ public class Server extends JPanel implements Runnable {
 				synchronized (clients) {
 					for (NewClient newClient : clients) {
 						users.append(newClient.getUserName() + "\n");
+						users.append(newClient.getIp() + "\n");
 					}						
 				}
 				
@@ -235,6 +245,10 @@ public class Server extends JPanel implements Runnable {
 		
 		public String getUserName() {
 			return userName;
+		}
+		
+		public String getIp() {
+			return ip;
 		}
 		
 		public void sendClients(int size, String text) {

@@ -38,7 +38,7 @@ public class Client extends JPanel {
 	
 	private JTextField jtfMessage = new JTextFieldLimit(1024);
 	private JLabel jlblToUser = new JLabel("");
-	private UserList jlUsers = new UserList(this);
+	private UserList jlUsers;
 	
 	private JCheckBox jcbBold = new JCheckBox("B");
 	private JCheckBox jcbItalic = new JCheckBox("I");
@@ -47,12 +47,10 @@ public class Client extends JPanel {
 	
 	private PrintWriter toServer;
 	private Scanner fromServer;
-
-	public Client(PrintWriter toServer, Scanner fromServer) {
-		this(toServer, fromServer, "n", "y", Color.BLACK.getRGB() + "");
-	}
 	
-	public Client(PrintWriter toServer, Scanner fromServer, String isFontBold, String isFontItalic, String fontColor) {
+	public Client(PrintWriter toServer, Scanner fromServer, String isFontBold, String isFontItalic, String fontColor, boolean isAdmin) {
+		jlUsers = new UserList(this, isAdmin);
+		
 		this.toServer = toServer;
 		this.fromServer = fromServer;
 		setLayout(new BorderLayout(5, 5));
@@ -145,7 +143,7 @@ public class Client extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!jtfMessage.getText().equals("")) {
-					if(jlblToUser.isVisible()) {
+					if(jlblToUser.isVisible()) {//private message
 						Client.this.toServer.println("2");
 						Client.this.toServer.println(jlblToUser.getText().substring(2));
 						Client.this.toServer.println(fontStyle + "");
@@ -153,7 +151,7 @@ public class Client extends JPanel {
 						Client.this.toServer.println(jtfMessage.getText());
 						Client.this.toServer.flush();
 						jtfMessage.setText("");
-					} else {
+					} else {//public message
 						Client.this.toServer.println("1");
 						Client.this.toServer.println(fontStyle + "");
 						Client.this.toServer.println(colorPanel.getColor().getRGB());
@@ -224,6 +222,20 @@ public class Client extends JPanel {
 		jtfMessage.requestFocus();
 	}
 	
+	
+	
+	public void banUser(String userName) {
+		if(jlblToUser.getText().equals("> " + userName)) {
+			jlblToUser.setText("");
+			jlblToUser.setVisible(false);
+		} else {
+			jlblToUser.setText("> " + userName);
+			jlblToUser.setVisible(true);			
+		}
+		jtfMessage.requestFocus();
+	}
+	
+	
 	//receive messages and users list
 	class ReceiveMessage implements Runnable {
 		public ReceiveMessage() {
@@ -290,9 +302,11 @@ public class Client extends JPanel {
 					} else if(command.equals("2")) { //list of clients
 						int usersCount = Integer.parseInt(fromServer.nextLine());
 						String[] users = new String[usersCount];
+						String[] ips = new String[usersCount];
 						
 						for (int i = 0; i < users.length; i++) {
 							users[i] = fromServer.nextLine();
+							ips[i] = fromServer.nextLine();
 							
 						}
 						//check if private message user is online
@@ -310,7 +324,7 @@ public class Client extends JPanel {
 							}
 						}
 						
-						jlUsers.setData(users);						
+						jlUsers.setData(users, ips);						
 					}
 				}
 			} catch (NoSuchElementException e) {

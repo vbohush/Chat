@@ -16,15 +16,18 @@ public class UserList extends JPanel{
 	private static final long serialVersionUID = 1L;
 	private JPanel panel;
 	private Client clientPanel;
+	private boolean isAdmin;
 	
-	public UserList(Client clientPanel) {
+	
+	public UserList(Client clientPanel, boolean isAdmin) {
+		this.isAdmin = isAdmin;
 		this.clientPanel = clientPanel;
 		setLayout(new BorderLayout());
 		panel = new JPanel();
 		add(panel, BorderLayout.NORTH);
 	}
 	
-	public void setData(String[] stringUsers) {
+	public void setData(String[] stringUsers, String[] ips) {
 		panel.removeAll();
 		panel.setLayout(new GridLayout(stringUsers.length, 1, 5, 5));
 
@@ -35,7 +38,14 @@ public class UserList extends JPanel{
 			JLabel userNameLabel = new JLabel(stringUsers[i]);
 			userNameLabel.setFont(userNameLabel.getFont().deriveFont(Font.BOLD));
 			oneUserPanel.add(userNameLabel, BorderLayout.WEST);
-			oneUserPanel.add(new PmJButton(stringUsers[i], clientPanel), BorderLayout.EAST);
+			if(isAdmin) {
+				JPanel userButtonsPanel = new JPanel(new GridLayout(1, 2, 2, 0));
+				userButtonsPanel.add(new BanButton(stringUsers[i], ips[i], clientPanel));
+				userButtonsPanel.add(new PmJButton(stringUsers[i], clientPanel));
+				oneUserPanel.add(userButtonsPanel, BorderLayout.EAST);
+			} else {
+				oneUserPanel.add(new PmJButton(stringUsers[i], clientPanel), BorderLayout.EAST);
+			}
 			
 			oneUserPanel.setBackground(Color.WHITE);
 			panel.add(oneUserPanel);
@@ -43,6 +53,29 @@ public class UserList extends JPanel{
 		
 		panel.updateUI();
 	}
+	
+	class BanButton extends JButton {
+		private static final long serialVersionUID = 1L;
+		private String userName;
+		private Client clientPanel;
+		private String ip;
+		
+		public BanButton(String userName, String ip, Client clientPanel) {
+			super("Ban");
+			this.ip = ip;
+			this.clientPanel = clientPanel;
+			this.userName = userName;
+			setContentAreaFilled(false);
+			setBorder(new LineBorder(Color.BLACK));
+			addActionListener(new ActionListener() {				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					System.out.println(BanButton.this.userName + "  " + BanButton.this.ip);
+					//BanButton.this.clientPanel.banUser(BanButton.this.userName);
+				}
+			});
+		}
+	} 
 	
 	class PmJButton extends JButton {
 		private static final long serialVersionUID = 1L;
