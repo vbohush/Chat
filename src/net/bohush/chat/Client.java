@@ -18,6 +18,7 @@ import java.util.Scanner;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -224,14 +225,10 @@ public class Client extends JPanel {
 	
 	
 	
-	public void banUser(String userName) {
-		if(jlblToUser.getText().equals("> " + userName)) {
-			jlblToUser.setText("");
-			jlblToUser.setVisible(false);
-		} else {
-			jlblToUser.setText("> " + userName);
-			jlblToUser.setVisible(true);			
-		}
+	public void banUser(String ip) {
+		Client.this.toServer.println("3");
+		Client.this.toServer.println(ip);
+		Client.this.toServer.flush();
 		jtfMessage.requestFocus();
 	}
 	
@@ -325,6 +322,11 @@ public class Client extends JPanel {
 						}
 						
 						jlUsers.setData(users, ips);						
+					} else if(command.equals("4")) { //disconnect
+						fromServer.close();
+						toServer.close();
+						JOptionPane.showMessageDialog(null, "You are banned", "Warning", JOptionPane.WARNING_MESSAGE);
+						System.exit(1);
 					}
 				}
 			} catch (NoSuchElementException e) {

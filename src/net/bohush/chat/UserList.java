@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
@@ -70,8 +71,11 @@ public class UserList extends JPanel{
 			addActionListener(new ActionListener() {				
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					System.out.println(BanButton.this.userName + "  " + BanButton.this.ip);
-					//BanButton.this.clientPanel.banUser(BanButton.this.userName);
+					int confirm = JOptionPane.showOptionDialog( null, "Are you sure you want to ban ip \"" + BanButton.this.ip + "\" of user \"" + BanButton.this.userName + "\"",
+					"Ban confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+					if (confirm == JOptionPane.YES_OPTION) {
+						BanButton.this.clientPanel.banUser(BanButton.this.ip);
+					}
 				}
 			});
 		}

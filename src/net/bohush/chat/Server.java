@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -139,6 +140,7 @@ public class Server extends JPanel implements Runnable {
 					return;
 				}						
 				
+				//check admins
 				if(admins.containsKey(userName.toLowerCase())) {
 					toClient.println("3");
 					toClient.flush();
@@ -200,7 +202,7 @@ public class Server extends JPanel implements Runnable {
 							}						
 						}
 					//private message
-					} else {
+					} else if(command.equals("2")){
 						String toUser = fromClient.nextLine();
 						String fontStyle = fromClient.nextLine();
 						String messageColor = fromClient.nextLine();
@@ -213,6 +215,33 @@ public class Server extends JPanel implements Runnable {
 								}
 							}						
 						}
+					//ban users
+					} else {
+						String ipToBan = fromClient.nextLine();
+						saveToLog(new Date() + " " + ipToBan + " is banned\n");
+						ArrayList<NewClient> usersToBan = new ArrayList<NewClient>();
+						synchronized (clients) {
+							for (NewClient newClient : clients) {
+								if(newClient.getIp().equals(ipToBan)) {
+									usersToBan.add(newClient);
+								}
+							}
+							for (NewClient newClient : usersToBan) {
+								newClient.disConnect();
+								clients.remove(newClient);
+							}
+							//list of clients
+							users = new StringBuilder();
+							for (NewClient newClient : clients) {
+								users.append(newClient.getUserName() + "\n");
+								users.append(newClient.getIp() + "\n");
+							}						
+							//send clients names
+							for (NewClient newClient : clients) {
+								newClient.sendClients(clients.size(), users.toString());
+							}
+						}
+
 					}
 
 				}
@@ -249,6 +278,11 @@ public class Server extends JPanel implements Runnable {
 		
 		public String getIp() {
 			return ip;
+		}
+
+		public void disConnect() {
+			toClient.println("4");
+			toClient.flush();		
 		}
 		
 		public void sendClients(int size, String text) {
