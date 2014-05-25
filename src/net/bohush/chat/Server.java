@@ -3,14 +3,19 @@ package net.bohush.chat;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -34,10 +39,32 @@ public class Server extends JPanel implements Runnable {
 	private int maxUsersCount;
 	private Map<String, String> admins;
 	
+	private Set<String> banlist = Collections.synchronizedSet(new HashSet<String>());
+	static String charsetName = StandardCharsets.UTF_8.name();
+	
 	public Server(Map<String, String> admins, ServerSocket serverSocket, int maxUsersCount) {
 		this.admins = admins;
 		this.serverSocket = serverSocket;
 		this.maxUsersCount = maxUsersCount;
+		
+		//load list of banned ips
+		String banlistFileName = this.getClass().getResource("/").getPath() + "banlist.txt";
+		File banlistFile = null;
+		try {
+			banlistFile = new File(URLDecoder.decode(banlistFileName, charsetName));
+		} catch (UnsupportedEncodingException e3) { }
+		if(banlistFile.exists()) {
+			Scanner banlistInput;
+			try {
+				banlistInput = new Scanner(banlistFile, charsetName);
+				while(banlistInput.hasNextLine()) {
+					banlist.add(banlistInput.nextLine());
+				}
+				banlistInput.close();
+			} catch (IOException e) {
+			}
+		}
+		
 		setLayout(new BorderLayout());
 		jtaLog.setEditable(false);
 		jtaLog.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
@@ -119,6 +146,17 @@ public class Server extends JPanel implements Runnable {
 				toClient = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), Chat.charsetName));
 				userName = fromClient.nextLine();
 				ip = socket.getInetAddress().getHostAddress();
+
+
+				//check max users count
+				if(banlist.contains(ip)) {
+					toClient.println("4");
+					toClient.flush();
+					fromClient.close();
+					toClient.close();
+					saveToLog(new Date() + " Disallow connection from  " + socket + ", user name \""+ userName + "\", ip " + ip + " is banned\n");
+					return;
+				}
 				
 				//check max users count
 				if(clients.size() >= maxUsersCount) {
@@ -219,6 +257,7 @@ public class Server extends JPanel implements Runnable {
 					} else {
 						String ipToBan = fromClient.nextLine();
 						saveToLog(new Date() + " " + ipToBan + " is banned\n");
+						banlist.add(ipToBan);
 						ArrayList<NewClient> usersToBan = new ArrayList<NewClient>();
 						synchronized (clients) {
 							for (NewClient newClient : clients) {

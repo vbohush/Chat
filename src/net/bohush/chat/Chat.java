@@ -359,8 +359,15 @@ public class Chat extends JPanel{
 						socket.close();
 						jtfUserName.requestFocus();
 						return;
-					} if(answer.equals("2")) {
+					} else if(answer.equals("2")) {
 						JOptionPane.showMessageDialog(null, "There are too many users logged in", "Error", JOptionPane.ERROR_MESSAGE);
+						toServer.close();
+						fromServer.close();
+						socket.close();
+						jtfUserName.requestFocus();
+						return;
+					} else if(answer.equals("4")) {
+						JOptionPane.showMessageDialog(null, "Your IP is banned", "Error", JOptionPane.ERROR_MESSAGE);
 						toServer.close();
 						fromServer.close();
 						socket.close();
