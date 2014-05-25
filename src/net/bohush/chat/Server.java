@@ -3,10 +3,11 @@ package net.bohush.chat;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -39,8 +40,9 @@ public class Server extends JPanel implements Runnable {
 	private int maxUsersCount;
 	private Map<String, String> admins;
 	
+	String banlistFileName = this.getClass().getResource("/").getPath() + "banlist.txt";
+	RandomAccessFile banlistFile;
 	private Set<String> banlist = Collections.synchronizedSet(new HashSet<String>());
-	static String charsetName = StandardCharsets.UTF_8.name();
 	
 	public Server(Map<String, String> admins, ServerSocket serverSocket, int maxUsersCount) {
 		this.admins = admins;
@@ -48,21 +50,22 @@ public class Server extends JPanel implements Runnable {
 		this.maxUsersCount = maxUsersCount;
 		
 		//load list of banned ips
-		String banlistFileName = this.getClass().getResource("/").getPath() + "banlist.txt";
-		File banlistFile = null;
 		try {
-			banlistFile = new File(URLDecoder.decode(banlistFileName, charsetName));
+			banlistFileName = URLDecoder.decode(banlistFileName, StandardCharsets.UTF_8.name());
 		} catch (UnsupportedEncodingException e3) { }
-		if(banlistFile.exists()) {
-			Scanner banlistInput;
+		try {
+			banlistFile = new RandomAccessFile(banlistFileName, "rw");
 			try {
-				banlistInput = new Scanner(banlistFile, charsetName);
-				while(banlistInput.hasNextLine()) {
-					banlist.add(banlistInput.nextLine());
+				String nextIp = banlistFile.readLine();
+				while(nextIp != null) {
+					if(!nextIp.equals("")) {
+						banlist.add(nextIp);
+					}
+					nextIp = banlistFile.readLine();
 				}
-				banlistInput.close();
 			} catch (IOException e) {
 			}
+		} catch (FileNotFoundException e1) {
 		}
 		
 		setLayout(new BorderLayout());
@@ -257,8 +260,14 @@ public class Server extends JPanel implements Runnable {
 					} else {
 						String ipToBan = fromClient.nextLine();
 						saveToLog(new Date() + " " + ipToBan + " is banned\n");
-						banlist.add(ipToBan);
+						
+						if(!banlist.contains(ipToBan)) {
+							banlistFile.writeBytes(ipToBan + "\r\n");
+							banlist.add(ipToBan);							
+						}
+						
 						ArrayList<NewClient> usersToBan = new ArrayList<NewClient>();
+						
 						synchronized (clients) {
 							for (NewClient newClient : clients) {
 								if(newClient.getIp().equals(ipToBan)) {

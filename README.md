@@ -22,7 +22,7 @@ Optional features:
 
 3. Support both TCP/UDP mode. Additional bonus for non-server mode: client uses broadcast/multicast for sending messages to other clients.
 
-4. Chat users can have different access priviledges (admin/user, admin is able to ban user).
+4. ~~Chat users can have different access priviledges (admin/user, admin is able to ban user).~~
 
 5. ~~Chat client should support rich text features (font styles, colors).~~
 
