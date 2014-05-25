@@ -99,7 +99,7 @@ public class Client extends JPanel {
 		JPanel jpUsers = new JPanel(new BorderLayout(5, 5));
 
 		JScrollPane jspUsers = new JScrollPane(jlUsers);
-		jspUsers.setPreferredSize(new Dimension(150, 150));
+		jspUsers.setPreferredSize(new Dimension(170, 170));
 		jpUsers.add(jspUsers, BorderLayout.CENTER);
 		jpUsers.setBorder(new TitledBorder(new EmptyBorder(1, 1, 1, 1), "Users"));
 		mainPanel.add(jpUsers, BorderLayout.EAST);

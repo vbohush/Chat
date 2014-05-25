@@ -76,6 +76,7 @@ public class UserList extends JPanel{
 					if (confirm == JOptionPane.YES_OPTION) {
 						BanButton.this.clientPanel.banUser(BanButton.this.ip);
 					}
+					BanButton.this.clientPanel.requestFocus();
 				}
 			});
 		}
