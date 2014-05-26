@@ -49,7 +49,7 @@ public class Client extends JPanel {
 	private PrintWriter toServer;
 	private Scanner fromServer;
 	
-	public Client(PrintWriter toServer, Scanner fromServer, String isFontBold, String isFontItalic, String fontColor, boolean isAdmin) {
+	public Client(boolean isNonServerMode, PrintWriter toServer, Scanner fromServer, boolean isFontBold, boolean isFontItalic, String fontColor, boolean isAdmin) {
 		jlUsers = new UserList(this, isAdmin);
 		
 		this.toServer = toServer;
@@ -169,18 +169,8 @@ public class Client extends JPanel {
 		jbtnSend.addActionListener(sendMessage);
 		
 		//apply font settings
-		if(isFontBold.equals("y")) {
-			jcbBold.setSelected(true);
-			
-		} else {
-			jcbBold.setSelected(false);
-		}
-		if(isFontItalic.equals("y")) {
-			jcbItalic.setSelected(true);
-			
-		} else {
-			jcbItalic.setSelected(false);
-		}
+		jcbBold.setSelected(isFontBold);
+		jcbItalic.setSelected(isFontItalic);
 		changeFontStyle.actionPerformed(null);
 		
 		try {
@@ -193,17 +183,8 @@ public class Client extends JPanel {
 	}
 	
 	public String getSettings() {
-		String result = "";
-		if(jcbBold.isSelected()) {
-			result += "isfontbold=y\r\n";
-		} else {
-			result += "isfontbold=n\r\n";
-		}
-		if(jcbItalic.isSelected()) {
-			result += "isfontitalic=y\r\n";
-		} else {
-			result += "isfontitalic=n\r\n";
-		}
+		String result = "isfontbold=" + jcbBold.isSelected() + "\r\n";
+		result += "isfontitalic=" + jcbItalic .isSelected() + "\r\n";
 		result += "fontcolor=" + colorPanel.getColor().getRGB() + "\r\n";
 		return result;
 	}

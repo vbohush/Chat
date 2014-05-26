@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -38,9 +39,12 @@ public class Chat extends JPanel{
 	private static final long serialVersionUID = 1L;
 	private JTextField jtfServerPort;
 	private JTextField jtfServerCount;
+	private JCheckBox jcbNonServerMode;
+	private JLabel jlblConnectToIp;
 	private JTextField jtfConnectToIp;
 	private JTextField jtfConnectToPort;
 	private JTextField jtfUserName;
+	private JButton jbtnStartClient;
 	
 	private JFrame frame;
 	
@@ -48,10 +52,11 @@ public class Chat extends JPanel{
 	private File serverConfigFile;
 	private File clientConfigFile;
 	static String charsetName = StandardCharsets.UTF_8.name();
-	
+
 	//need for saving client settings
-	private String isFontBold = "n";
-	private String isFontItalic = "n";
+	private boolean isNonServerMode = false;
+	private boolean isFontBold = false;
+	private boolean isFontItalic = false;
 	private String fontColor = Color.BLACK.getRGB() + "";
 	private String clientSettings = "";
 	private Client client;
@@ -143,6 +148,9 @@ public class Chat extends JPanel{
 					}				
 				}
 				clientInput.close();
+				if((configs.get("isnonservermode") != null) && (configs.get("isnonservermode").equals("true"))) {
+					isNonServerMode = true;			
+				}
 				if(configs.get("ip") != null) {
 					connectToIP = configs.get("ip");
 				}
@@ -152,11 +160,11 @@ public class Chat extends JPanel{
 				if(configs.get("username") != null) {
 					userName = configs.get("username");			
 				}
-				if((configs.get("isfontbold") != null) && (configs.get("isfontbold").equals("y"))) {
-					isFontBold = "y";			
-				}
-				if((configs.get("isfontitalic") != null) && (configs.get("isfontitalic").equals("y"))) {
-					isFontItalic = "y";			
+				if((configs.get("isfontbold") != null) && (configs.get("isfontbold").equals("true"))) {
+					isFontBold = true;			
+				}				
+				if((configs.get("isfontitalic") != null) && (configs.get("isfontitalic").equals("true"))) {
+					isFontItalic = true;			
 				}
 				if(configs.get("fontcolor") != null) {
 					fontColor = configs.get("fontcolor");					
@@ -173,8 +181,11 @@ public class Chat extends JPanel{
 		JPanel jpServer = new JPanel(new BorderLayout());
 		jpServer.setBorder(new TitledBorder("Server"));
 		
-		JPanel jpConfigServer = new JPanel(new GridLayout(3, 3, 5, 20));
+		JPanel jpConfigServer = new JPanel(new GridLayout(4, 2, 5, 20));
 		jpConfigServer.setBorder(new EmptyBorder(10, 10, 10, 10));
+		
+		jpConfigServer.add(new JLabel(" "));
+		jpConfigServer.add(new JLabel(" "));
 		
 		JLabel jlblServerPort = new JLabel("Port Number: ");
 		jlblServerPort.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -193,7 +204,7 @@ public class Chat extends JPanel{
 		
 		JPanel jpStartServer = new JPanel(new BorderLayout());
 		jpStartServer.setBorder(new EmptyBorder(10, 10, 10, 10));
-		JButton jbtnStartServer = new JButton("Start Server");
+		JButton jbtnStartServer = new JButton("Start server");
 		jbtnStartServer.setPreferredSize(new Dimension(30, 30));
 		jpStartServer.add(jbtnStartServer, BorderLayout.CENTER);		
 		
@@ -275,9 +286,23 @@ public class Chat extends JPanel{
 		JPanel jpClient = new JPanel(new BorderLayout());
 		jpClient.setBorder(new TitledBorder("Client"));
 			
-		JPanel jpConfigClient = new JPanel(new GridLayout(3, 3, 5, 20));
+		JPanel jpConfigClient = new JPanel(new GridLayout(4, 2, 5, 20));
 		jpConfigClient.setBorder(new EmptyBorder(10, 10, 10, 10));
-		JLabel jlblConnectToIp = new JLabel("IP Address: ");
+		
+		JLabel jlblNonServerMode = new JLabel("Non-Server Mode: ");
+		jlblNonServerMode.setHorizontalAlignment(SwingConstants.RIGHT);
+		jpConfigClient.add(jlblNonServerMode);
+		jcbNonServerMode = new JCheckBox("", isNonServerMode);
+		jcbNonServerMode.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				isNonServerMode = jcbNonServerMode.isSelected();
+				updateClientConfigUI();
+			}
+		});
+		jpConfigClient.add(jcbNonServerMode);
+		
+		jlblConnectToIp = new JLabel("IP Address: ");
 		jlblConnectToIp.setHorizontalAlignment(SwingConstants.RIGHT);
 		jpConfigClient.add(jlblConnectToIp);
 		jtfConnectToIp = new JTextField(connectToIP, 7);
@@ -297,14 +322,15 @@ public class Chat extends JPanel{
 		
 		JPanel jpStartClient = new JPanel(new BorderLayout());
 		jpStartClient.setBorder(new EmptyBorder(10, 10, 10, 10));
-		JButton jbtnStartClient = new JButton("Connect to Server");
+		jbtnStartClient = new JButton("");
 		jbtnStartClient.setPreferredSize(new Dimension(30, 30));
 		jpStartClient.add(jbtnStartClient, BorderLayout.CENTER);
 		
 		
 		jpClient.add(jpConfigClient, BorderLayout.CENTER);
 		jpClient.add(jpStartClient, BorderLayout.SOUTH);
-		
+
+		updateClientConfigUI();
 		jpStart.add(jpClient);
 		
 		//start client
@@ -337,7 +363,7 @@ public class Chat extends JPanel{
 					jtfUserName.requestFocus();
 					return;
 				}
-				clientSettings = "ip=" + ip + "\r\nport=" + port + "\r\nusername=" + userName + "\r\n";
+				clientSettings = "isnonservermode=" + isNonServerMode + "\r\nip=" + ip + "\r\nport=" + port + "\r\nusername=" + userName + "\r\n";
 				//save settings
 				saveClientSettings(clientSettings + "isfontbold=" + isFontBold + "\r\nisfontitalic=" + isFontItalic + "\r\nfontcolor=" + fontColor);
 				
@@ -398,7 +424,7 @@ public class Chat extends JPanel{
 						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
 						Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 						
-						client = new Client(toServer, fromServer, isFontBold, isFontItalic, fontColor, isAdmin);
+						client = new Client(isNonServerMode, toServer, fromServer, isFontBold, isFontItalic, fontColor, isAdmin);
 						
 						Chat.this.frame.addWindowListener(new WindowAdapter() {
 							@Override
@@ -434,6 +460,18 @@ public class Chat extends JPanel{
 		jbtnStartClient.addActionListener(startClientAction);
 		
 		add(jpStart, BorderLayout.CENTER);
+	}
+	
+	private void updateClientConfigUI() {
+		if(isNonServerMode) {
+			jtfConnectToIp.setEnabled(false);
+			jlblConnectToIp.setEnabled(false);
+			jbtnStartClient.setText("Start Non-Server Mode");
+		} else {
+			jtfConnectToIp.setEnabled(true);
+			jlblConnectToIp.setEnabled(true);
+			jbtnStartClient.setText("Connect to Server");
+		}
 	}
 	
 	public void saveClientSettings(String settings) {
