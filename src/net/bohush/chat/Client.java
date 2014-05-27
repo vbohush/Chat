@@ -273,9 +273,7 @@ public class Client extends JPanel {
 							
 							jtpChat.setCaretPosition(doc.getLength());
 							
-						} catch (BadLocationException e) {
-							e.printStackTrace();
-						}
+						} catch (BadLocationException e) {}
 					
 					} else if(command.equals("2")) { //list of clients
 						int usersCount = Integer.parseInt(fromServer.nextLine());

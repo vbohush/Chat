@@ -32,7 +32,7 @@ public class JTextFieldLimit extends JTextField {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void insertString(int offset, String str, AttributeSet attr)	throws BadLocationException {
+		public void insertString(int offset, String str, AttributeSet attr) throws BadLocationException {
 			if (str == null) {
 				return;
 			}

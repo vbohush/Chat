@@ -45,6 +45,7 @@ public class Chat extends JPanel{
 	private JTextField jtfConnectToPort;
 	private JTextField jtfUserName;
 	private JButton jbtnStartClient;
+	private JButton jbtnStartServer;
 	
 	private JFrame frame;
 	
@@ -65,6 +66,8 @@ public class Chat extends JPanel{
 	//need for saving server settings
 	private String stringAdmins = "";
 	private Map<String, String> admins = new HashMap<String, String>();
+	
+	private boolean isStarting = false;
 	
 	public Chat(JFrame frame)  {
 		
@@ -204,7 +207,7 @@ public class Chat extends JPanel{
 		
 		JPanel jpStartServer = new JPanel(new BorderLayout());
 		jpStartServer.setBorder(new EmptyBorder(10, 10, 10, 10));
-		JButton jbtnStartServer = new JButton("Start server");
+		jbtnStartServer = new JButton("Start Server");
 		jbtnStartServer.setPreferredSize(new Dimension(30, 30));
 		jpStartServer.add(jbtnStartServer, BorderLayout.CENTER);		
 		
@@ -213,10 +216,19 @@ public class Chat extends JPanel{
 		
 		jpStart.add(jpServer);
 		
-		//start server
-		ActionListener startServerAction = new ActionListener() {			
+		class StartingServerThread implements Runnable {
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void run() {
+				jbtnStartServer.setText("Starting...");
+				jtfServerPort.setEnabled(false);
+				jtfServerCount.setEnabled(false);
+				jcbNonServerMode.setEnabled(false);
+				jtfConnectToIp.setEnabled(false);
+				jtfConnectToPort.setEnabled(false);
+				jtfUserName.setEnabled(false);
+				jbtnStartClient.setEnabled(false);
+				jbtnStartServer.setEnabled(false);
+				
 				//check port
 				int port = 0;
 				try {
@@ -226,6 +238,7 @@ public class Chat extends JPanel{
 					}
 				} catch (NumberFormatException e2) {
 					JOptionPane.showMessageDialog(null, "\"Port Number\" must be an integer between 1 and 65535", "Error", JOptionPane.ERROR_MESSAGE);
+					finishThread();
 					jtfServerPort.requestFocus();
 					return;
 				}
@@ -238,6 +251,7 @@ public class Chat extends JPanel{
 					}
 				} catch (NumberFormatException e2) {
 					JOptionPane.showMessageDialog(null, "\"Max Users Count\" must be an integer greater than 1", "Error", JOptionPane.ERROR_MESSAGE);
+					finishThread();
 					jtfServerCount.requestFocus();
 					return;
 				}
@@ -275,7 +289,35 @@ public class Chat extends JPanel{
 				} catch (IOException e2) {
 					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
-				
+				finishThread();
+				jtfServerPort.requestFocus();
+			}
+			
+			private void finishThread() {
+				jbtnStartServer.setText("Start Server");
+				jtfServerPort.setEnabled(true);
+				jtfServerCount.setEnabled(true);
+				jcbNonServerMode.setEnabled(true);
+				jtfConnectToIp.setEnabled(true);
+				jtfConnectToPort.setEnabled(true);
+				jtfUserName.setEnabled(true);
+				jbtnStartClient.setEnabled(true);
+				jbtnStartServer.setEnabled(true);
+				updateClientConfigUI();
+				isStarting = false;
+			}
+			
+		}
+		
+		//start server
+		ActionListener startServerAction = new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(!isStarting) {
+					isStarting = true;
+					Thread thread = new Thread(new StartingServerThread());
+					thread.start();
+				}				
 			}
 		};
 		jtfServerPort.addActionListener(startServerAction);
@@ -322,7 +364,7 @@ public class Chat extends JPanel{
 		
 		JPanel jpStartClient = new JPanel(new BorderLayout());
 		jpStartClient.setBorder(new EmptyBorder(10, 10, 10, 10));
-		jbtnStartClient = new JButton("");
+		jbtnStartClient = new JButton("Start Client");
 		jbtnStartClient.setPreferredSize(new Dimension(30, 30));
 		jpStartClient.add(jbtnStartClient, BorderLayout.CENTER);
 		
@@ -333,14 +375,26 @@ public class Chat extends JPanel{
 		updateClientConfigUI();
 		jpStart.add(jpClient);
 		
-		//start client
-		ActionListener startClientAction = new ActionListener() {			
+		class StartingClientThread implements Runnable {
+
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void run() {
+				jbtnStartClient.setText("Starting...");
+				jtfServerPort.setEnabled(false);
+				jtfServerCount.setEnabled(false);
+				jcbNonServerMode.setEnabled(false);
+				jtfConnectToIp.setEnabled(false);
+				jtfConnectToPort.setEnabled(false);
+				jtfUserName.setEnabled(false);
+				jbtnStartClient.setEnabled(false);
+				jbtnStartServer.setEnabled(false);
+				
+				
 				//check ip
 				String ip = jtfConnectToIp.getText();
 				if(ip.equals("")) {
 					JOptionPane.showMessageDialog(null, "Enter IP address", "Error", JOptionPane.ERROR_MESSAGE);
+					finishThread();
 					jtfConnectToIp.requestFocus();
 					return;
 				}
@@ -353,6 +407,7 @@ public class Chat extends JPanel{
 					}
 				} catch (NumberFormatException e2) {
 					JOptionPane.showMessageDialog(null, "\"Port Number\" must be an integer between 1 and 65535", "Error", JOptionPane.ERROR_MESSAGE);
+					finishThread();
 					jtfConnectToPort.requestFocus();
 					return;
 				}
@@ -360,6 +415,7 @@ public class Chat extends JPanel{
 				String userName = jtfUserName.getText();
 				if(userName.equals("")) {
 					JOptionPane.showMessageDialog(null, "Enter user name", "Error", JOptionPane.ERROR_MESSAGE);
+					finishThread();
 					jtfUserName.requestFocus();
 					return;
 				}
@@ -383,6 +439,7 @@ public class Chat extends JPanel{
 						toServer.close();
 						fromServer.close();
 						socket.close();
+						finishThread();
 						jtfUserName.requestFocus();
 						return;
 					} else if(answer.equals("2")) {
@@ -390,6 +447,7 @@ public class Chat extends JPanel{
 						toServer.close();
 						fromServer.close();
 						socket.close();
+						finishThread();
 						jtfUserName.requestFocus();
 						return;
 					} else if(answer.equals("4")) {
@@ -397,6 +455,7 @@ public class Chat extends JPanel{
 						toServer.close();
 						fromServer.close();
 						socket.close();
+						finishThread();
 						jtfUserName.requestFocus();
 						return;
 					} else {
@@ -413,6 +472,7 @@ public class Chat extends JPanel{
 								toServer.close();
 								fromServer.close();
 								socket.close();
+								finishThread();
 								jtfUserName.requestFocus();
 								return;
 							} else {
@@ -451,7 +511,35 @@ public class Chat extends JPanel{
 				} catch (IOException e2) {
 					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				} 
-
+				finishThread();
+				jtfUserName.requestFocus();
+			}
+			
+			private void finishThread() {
+				jbtnStartClient.setText("Start Client");
+				jtfServerPort.setEnabled(true);
+				jtfServerCount.setEnabled(true);
+				jcbNonServerMode.setEnabled(true);
+				jtfConnectToIp.setEnabled(true);
+				jtfConnectToPort.setEnabled(true);
+				jtfUserName.setEnabled(true);
+				jbtnStartClient.setEnabled(true);
+				jbtnStartServer.setEnabled(true);
+				updateClientConfigUI();
+				isStarting = false;
+			}
+			
+		}
+		
+		//start client
+		ActionListener startClientAction = new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(!isStarting) {
+					isStarting = true;
+					Thread thread = new Thread(new StartingClientThread());
+					thread.start();
+				}
 			}
 		};
 		jtfConnectToIp.addActionListener(startClientAction);
@@ -466,11 +554,9 @@ public class Chat extends JPanel{
 		if(isNonServerMode) {
 			jtfConnectToIp.setEnabled(false);
 			jlblConnectToIp.setEnabled(false);
-			jbtnStartClient.setText("Start Non-Server Mode");
 		} else {
 			jtfConnectToIp.setEnabled(true);
 			jlblConnectToIp.setEnabled(true);
-			jbtnStartClient.setText("Connect to Server");
 		}
 	}
 	
