@@ -186,7 +186,7 @@ public class Server extends JPanel implements Runnable {
 					toClient.println("3");
 					toClient.flush();
 					String password = fromClient.nextLine();
-					if(password.equals(admins.get(userName).toLowerCase())) {
+					if(password.equals(admins.get(userName.toLowerCase()))) {
 						toClient.println("0");
 						toClient.flush();		
 					} else {
