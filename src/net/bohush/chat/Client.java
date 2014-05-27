@@ -9,7 +9,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
@@ -48,12 +56,28 @@ public class Client extends JPanel {
 	
 	private PrintWriter toServer;
 	private Scanner fromServer;
+	private DatagramSocket serverSocket;
 	
-	public Client(boolean isNonServerMode, PrintWriter toServer, Scanner fromServer, boolean isFontBold, boolean isFontItalic, String fontColor, boolean isAdmin) {
-		jlUsers = new UserList(this, isAdmin);
+	private boolean isNonServerMode;
+	private int port;
+	private String userName;
+	
+	public Client(boolean isNonServerMode, PrintWriter toServer, Scanner fromServer, DatagramSocket serverSocket, int port, String userName, boolean isFontBold, boolean isFontItalic, String fontColor, boolean isAdmin) {
+		this.isNonServerMode = isNonServerMode;
+		this.port = port;
+		this.userName = userName;
+		if(!isNonServerMode) {
+			jlUsers = new UserList(this, isAdmin);
+			this.toServer = toServer;
+			this.fromServer = fromServer;
+		} else {
+			this.serverSocket = serverSocket;
+			try {
+				serverSocket.setBroadcast(true);
+			} catch (SocketException e1) {
+			}
+		}
 		
-		this.toServer = toServer;
-		this.fromServer = fromServer;
 		setLayout(new BorderLayout(5, 5));
 		JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
 		
@@ -96,19 +120,24 @@ public class Client extends JPanel {
 	    jpMessage.add(jpMessageOptions, BorderLayout.EAST);
 	    
 	    mainPanel.add(jpMessage, BorderLayout.SOUTH);
-		JPanel jpUsers = new JPanel(new BorderLayout(5, 5));
+	    
+	    if(!isNonServerMode) {
+	    	JPanel jpUsers = new JPanel(new BorderLayout(5, 5));
 
-		JScrollPane jspUsers = new JScrollPane(jlUsers);
-		jspUsers.setPreferredSize(new Dimension(170, 170));
-		jpUsers.add(jspUsers, BorderLayout.CENTER);
-		jpUsers.setBorder(new TitledBorder(new EmptyBorder(1, 1, 1, 1), "Users"));
-		mainPanel.add(jpUsers, BorderLayout.EAST);
-		  
+			JScrollPane jspUsers = new JScrollPane(jlUsers);
+			jspUsers.setPreferredSize(new Dimension(170, 170));
+			jpUsers.add(jspUsers, BorderLayout.CENTER);
+			jpUsers.setBorder(new TitledBorder(new EmptyBorder(1, 1, 1, 1), "Users"));
+			mainPanel.add(jpUsers, BorderLayout.EAST);
+	    }
 		
 		
 	    add(mainPanel, BorderLayout.CENTER);
-	    
-		new ReceiveMessage();
+	    if(isNonServerMode) {
+	    	new ReceiveMessageUDP();
+	    } else {
+	    	new ReceiveMessageTCP();
+	    }
 		jtfMessage.requestFocus();
 		
 		//change font style
@@ -144,21 +173,37 @@ public class Client extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!jtfMessage.getText().equals("")) {
-					if(jlblToUser.isVisible()) {//private message
-						Client.this.toServer.println("2");
-						Client.this.toServer.println(jlblToUser.getText().substring(2));
-						Client.this.toServer.println(fontStyle + "");
-						Client.this.toServer.println(colorPanel.getColor().getRGB());
-						Client.this.toServer.println(jtfMessage.getText());
-						Client.this.toServer.flush();
-						jtfMessage.setText("");
-					} else {//public message
-						Client.this.toServer.println("1");
-						Client.this.toServer.println(fontStyle + "");
-						Client.this.toServer.println(colorPanel.getColor().getRGB());
-						Client.this.toServer.println(jtfMessage.getText());
-						Client.this.toServer.flush();
-						jtfMessage.setText("");
+					if (Client.this.isNonServerMode) {// UDP-mmode
+
+						try {
+							InetAddress IPAddress = InetAddress.getByName("255.255.255.255");
+							String sentence = fontStyle + "\n" + colorPanel.getColor().getRGB() + "\n " + Client.this.userName + ": " + jtfMessage.getText();
+							byte[] sendData = sentence.getBytes(StandardCharsets.UTF_8.name());
+							DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Client.this.port);
+							Client.this.serverSocket.send(sendPacket);
+							jtfMessage.setText("");
+						} catch (UnknownHostException e1) {
+						} catch (IOException e1) {
+						}
+
+					} else {// TCP-mode
+						if (jlblToUser.isVisible()) {// private message
+							Client.this.toServer.println("2");
+							Client.this.toServer.println(jlblToUser.getText().substring(2));
+							Client.this.toServer.println(fontStyle + "");
+							Client.this.toServer.println(colorPanel.getColor().getRGB());
+							Client.this.toServer.println(jtfMessage.getText());
+							Client.this.toServer.flush();
+							jtfMessage.setText("");
+						} else {// public message
+							Client.this.toServer.println("1");
+							Client.this.toServer.println(fontStyle + "");
+							Client.this.toServer.println(colorPanel.getColor().getRGB());
+							Client.this.toServer.println(jtfMessage.getText());
+							Client.this.toServer.flush();
+							jtfMessage.setText("");
+						}
+
 					}
 				}
 				jtfMessage.requestFocus();
@@ -213,10 +258,83 @@ public class Client extends JPanel {
 		jtfMessage.requestFocus();
 	}
 	
+	// receive messages and users list in UDP-mode
+	class ReceiveMessageUDP implements Runnable {
+		public ReceiveMessageUDP() {
+			Thread thread = new Thread(this);
+			thread.start();
+		}
+
+		@Override
+		public void run() {
+			while(true) {
+			    byte[] buf = new byte[4200];  
+			      
+			    DatagramPacket dp = new DatagramPacket(buf, buf.length);  
+			    try {
+					Client.this.serverSocket.receive(dp);
+
+					String[] messageData;
+					try {
+						messageData = new String(dp.getData(), 0, dp.getLength(), StandardCharsets.UTF_8.name()).split("\n");
+					} catch (UnsupportedEncodingException e) {
+						messageData = new String(dp.getData(), 0, dp.getLength()).split("\n");
+					}
+					
+					Calendar messageTime = new GregorianCalendar();
+					String time = String.format("[%02d:%02d:%02d]", messageTime.get(Calendar.HOUR_OF_DAY), messageTime.get(Calendar.MINUTE), messageTime.get(Calendar.SECOND));
+					
+					int messageFontStyle = Integer.parseInt(messageData[0]);
+					Color messageColor = new Color(Integer.parseInt(messageData[1]));
+					String message = messageData[2];
+					
+					try {
+						
+						SimpleAttributeSet aset = new SimpleAttributeSet();
+					
+						StyleConstants.setForeground(aset, Color.GRAY);
+						StyleConstants.setBold(aset, true);	
+						StyleConstants.setItalic(aset, false);
+						doc.insertString(doc.getLength(), time, aset);
+						
+						aset = new SimpleAttributeSet();
+					
+						StyleConstants.setForeground(aset, messageColor);
+						if(messageFontStyle == Font.PLAIN) {
+							StyleConstants.setBold(aset, false);	
+							StyleConstants.setItalic(aset, false);							
+						} else if(messageFontStyle == Font.BOLD) {
+							StyleConstants.setBold(aset, true);	
+							StyleConstants.setItalic(aset, false);
+						} else if(messageFontStyle == Font.ITALIC) {
+							StyleConstants.setBold(aset, false);	
+							StyleConstants.setItalic(aset, true);		
+						} else if(messageFontStyle == Font.BOLD + Font.ITALIC) {
+							StyleConstants.setBold(aset, true);	
+							StyleConstants.setItalic(aset, true);		
+						}
+
+						doc.insertString(doc.getLength(), message + " \n", aset);
+						//limit lines count in chat
+						String text = doc.getText(0, doc.getLength()); 
+						if(text.split("\n").length > 200) {
+							doc.remove(0, text.indexOf("\n") + 1);
+						}
+						
+						jtpChat.setCaretPosition(doc.getLength());
+						
+					} catch (BadLocationException e2) {}
+					
+				} catch (IOException e1) {
+				}			    
+			}
+		}
+
+	}
 	
-	//receive messages and users list
-	class ReceiveMessage implements Runnable {
-		public ReceiveMessage() {
+	//receive messages and users list in TCP-mode
+	class ReceiveMessageTCP implements Runnable {
+		public ReceiveMessageTCP() {
 			Thread thread = new Thread(this);
 			thread.start();
 		}

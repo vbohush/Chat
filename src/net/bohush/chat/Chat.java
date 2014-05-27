@@ -13,8 +13,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -389,15 +391,17 @@ public class Chat extends JPanel{
 				jbtnStartClient.setEnabled(false);
 				jbtnStartServer.setEnabled(false);
 				
-				
 				//check ip
-				String ip = jtfConnectToIp.getText();
-				if(ip.equals("")) {
-					JOptionPane.showMessageDialog(null, "Enter IP address", "Error", JOptionPane.ERROR_MESSAGE);
-					finishThread();
-					jtfConnectToIp.requestFocus();
-					return;
+				String ip = jtfConnectToIp.getText();				
+				if(!jcbNonServerMode.isSelected()) {
+					if(ip.equals("")) {
+						JOptionPane.showMessageDialog(null, "Enter IP address", "Error", JOptionPane.ERROR_MESSAGE);
+						finishThread();
+						jtfConnectToIp.requestFocus();
+						return;
+					}			
 				}
+
 				//check port
 				int port = 0;
 				try {
@@ -423,73 +427,21 @@ public class Chat extends JPanel{
 				//save settings
 				saveClientSettings(clientSettings + "isfontbold=" + isFontBold + "\r\nisfontitalic=" + isFontItalic + "\r\nfontcolor=" + fontColor);
 				
-				//connect to server
-				try {
-					@SuppressWarnings("resource")
-					Socket socket = new Socket(ip, port);
-					
-					PrintWriter toServer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), charsetName));
-					toServer.println(userName);
-					toServer.flush();
-					
-					Scanner fromServer = new Scanner(socket.getInputStream(), charsetName);
-					String answer = fromServer.nextLine();
-					if(answer.equals("1")) {
-						JOptionPane.showMessageDialog(null, "User \"" + userName + "\" is already logged in", "Error", JOptionPane.ERROR_MESSAGE);
-						toServer.close();
-						fromServer.close();
-						socket.close();
-						finishThread();
-						jtfUserName.requestFocus();
-						return;
-					} else if(answer.equals("2")) {
-						JOptionPane.showMessageDialog(null, "There are too many users logged in", "Error", JOptionPane.ERROR_MESSAGE);
-						toServer.close();
-						fromServer.close();
-						socket.close();
-						finishThread();
-						jtfUserName.requestFocus();
-						return;
-					} else if(answer.equals("4")) {
-						JOptionPane.showMessageDialog(null, "Your IP is banned", "Error", JOptionPane.ERROR_MESSAGE);
-						toServer.close();
-						fromServer.close();
-						socket.close();
-						finishThread();
-						jtfUserName.requestFocus();
-						return;
-					} else {
-						if(answer.equals("3")) {
-							String password = JOptionPane.showInputDialog(null, "Enter your passwrod", "Admin login", JOptionPane.QUESTION_MESSAGE);
-							if(password == null) {
-								password = "";
-							}
-							toServer.println(password);
-							toServer.flush();
-							String allow = fromServer.nextLine();
-							if(allow.equals("1")) {
-								JOptionPane.showMessageDialog(null, "Wrong password", "Error", JOptionPane.ERROR_MESSAGE);
-								toServer.close();
-								fromServer.close();
-								socket.close();
-								finishThread();
-								jtfUserName.requestFocus();
-								return;
-							} else {
-								isAdmin = true;
-							}
-						}
+				if(jcbNonServerMode.isSelected()) {
+					try {
+						DatagramSocket serverSocket = new DatagramSocket(port);
+						
 						Chat.this.frame.setSize(640, 480);
 						Chat.this.frame.setLocationRelativeTo(null);
-						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
+						Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", started in non-server mode on port " + port + " as " + userName);
 						Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 						
-						client = new Client(isNonServerMode, toServer, fromServer, isFontBold, isFontItalic, fontColor, isAdmin);
+						client = new Client(true, null, null, serverSocket, port, userName, isFontBold, isFontItalic, fontColor, isAdmin);
 						
 						Chat.this.frame.addWindowListener(new WindowAdapter() {
 							@Override
 							public void windowClosing(WindowEvent e) {
-								int confirm = JOptionPane.showOptionDialog( null, "Are you sure you want to disconnect and exit?",
+								int confirm = JOptionPane.showOptionDialog( null, "Are you sure you want to exit?",
 								"Exit confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 								if (confirm == JOptionPane.YES_OPTION) {
 									Chat.this.saveClientSettings(clientSettings + Chat.this.client.getSettings());
@@ -503,16 +455,104 @@ public class Chat extends JPanel{
 						jpStart.add(client, BorderLayout.CENTER);
 						client.setFocus();
 						jpStart.updateUI();
-
-					}					
-				} catch (UnknownHostException e2) {
-					JOptionPane.showMessageDialog(null, "Unknown host: \"" + ip + "\"", "Error", JOptionPane.ERROR_MESSAGE);
-					jtfConnectToIp.requestFocus();
-				} catch (IOException e2) {
-					JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				} 
-				finishThread();
-				jtfUserName.requestFocus();
+						
+					} catch (SocketException e) {
+						JOptionPane.showMessageDialog(null, e.getClass().getName() + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);;
+					}
+					finishThread();
+					jtfUserName.requestFocus();
+				} else {
+					//connect to server
+					try {
+						@SuppressWarnings("resource")
+						Socket socket = new Socket(ip, port);
+						
+						PrintWriter toServer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), charsetName));
+						toServer.println(userName);
+						toServer.flush();
+						
+						Scanner fromServer = new Scanner(socket.getInputStream(), charsetName);
+						String answer = fromServer.nextLine();
+						if(answer.equals("1")) {
+							JOptionPane.showMessageDialog(null, "User \"" + userName + "\" is already logged in", "Error", JOptionPane.ERROR_MESSAGE);
+							toServer.close();
+							fromServer.close();
+							socket.close();
+							finishThread();
+							jtfUserName.requestFocus();
+							return;
+						} else if(answer.equals("2")) {
+							JOptionPane.showMessageDialog(null, "There are too many users logged in", "Error", JOptionPane.ERROR_MESSAGE);
+							toServer.close();
+							fromServer.close();
+							socket.close();
+							finishThread();
+							jtfUserName.requestFocus();
+							return;
+						} else if(answer.equals("4")) {
+							JOptionPane.showMessageDialog(null, "Your IP is banned", "Error", JOptionPane.ERROR_MESSAGE);
+							toServer.close();
+							fromServer.close();
+							socket.close();
+							finishThread();
+							jtfUserName.requestFocus();
+							return;
+						} else {
+							if(answer.equals("3")) {
+								String password = JOptionPane.showInputDialog(null, "Enter your passwrod", "Admin login", JOptionPane.QUESTION_MESSAGE);
+								if(password == null) {
+									password = "";
+								}
+								toServer.println(password);
+								toServer.flush();
+								String allow = fromServer.nextLine();
+								if(allow.equals("1")) {
+									JOptionPane.showMessageDialog(null, "Wrong password", "Error", JOptionPane.ERROR_MESSAGE);
+									toServer.close();
+									fromServer.close();
+									socket.close();
+									finishThread();
+									jtfUserName.requestFocus();
+									return;
+								} else {
+									isAdmin = true;
+								}
+							}
+							Chat.this.frame.setSize(640, 480);
+							Chat.this.frame.setLocationRelativeTo(null);
+							Chat.this.frame.setTitle(Chat.this.frame.getTitle() + ", connected to " + ip + ":" + port + " as " + userName);
+							Chat.this.frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+							
+							client = new Client(false, toServer, fromServer, null, port, userName, isFontBold, isFontItalic, fontColor, isAdmin);
+							
+							Chat.this.frame.addWindowListener(new WindowAdapter() {
+								@Override
+								public void windowClosing(WindowEvent e) {
+									int confirm = JOptionPane.showOptionDialog( null, "Are you sure you want to disconnect and exit?",
+									"Exit confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+									if (confirm == JOptionPane.YES_OPTION) {
+										Chat.this.saveClientSettings(clientSettings + Chat.this.client.getSettings());
+										System.exit(0);
+									}
+								}
+							});
+							
+							jpStart.removeAll();
+							jpStart.setLayout(new BorderLayout());
+							jpStart.add(client, BorderLayout.CENTER);
+							client.setFocus();
+							jpStart.updateUI();
+	
+						}					
+					} catch (UnknownHostException e2) {
+						JOptionPane.showMessageDialog(null, "Unknown host: \"" + ip + "\"", "Error", JOptionPane.ERROR_MESSAGE);
+						jtfConnectToIp.requestFocus();
+					} catch (IOException e2) {
+						JOptionPane.showMessageDialog(null, e2.getClass().getName() + ": " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					} 
+					finishThread();
+					jtfUserName.requestFocus();
+				}
 			}
 			
 			private void finishThread() {
