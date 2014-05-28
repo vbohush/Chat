@@ -395,7 +395,8 @@ public class Client extends JPanel {
 					}
 				}
 			} catch (NoSuchElementException e) {
-				e.printStackTrace();
+				JOptionPane.showMessageDialog(null, "Connection to server lost", "Error", JOptionPane.WARNING_MESSAGE);
+				System.exit(2);
 			}
 		}
 	}
