@@ -181,6 +181,7 @@ public class Client extends JPanel {
 							byte[] sendData = sentence.getBytes(StandardCharsets.UTF_8.name());
 							DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Client.this.port);
 							Client.this.serverSocket.send(sendPacket);
+							showNewMessage(fontStyle, colorPanel.getColor(), " " + Client.this.userName + ": " + jtfMessage.getText(), false);
 							jtfMessage.setText("");
 						} catch (UnknownHostException e1) {
 						} catch (IOException e1) {
@@ -190,14 +191,14 @@ public class Client extends JPanel {
 						if (jlblToUser.isVisible()) {// private message
 							Client.this.toServer.println("2");
 							Client.this.toServer.println(jlblToUser.getText().substring(2));
-							Client.this.toServer.println(fontStyle + "");
+							Client.this.toServer.println(fontStyle);
 							Client.this.toServer.println(colorPanel.getColor().getRGB());
 							Client.this.toServer.println(jtfMessage.getText());
 							Client.this.toServer.flush();
 							jtfMessage.setText("");
 						} else {// public message
 							Client.this.toServer.println("1");
-							Client.this.toServer.println(fontStyle + "");
+							Client.this.toServer.println(fontStyle);
 							Client.this.toServer.println(colorPanel.getColor().getRGB());
 							Client.this.toServer.println(jtfMessage.getText());
 							Client.this.toServer.flush();
@@ -258,6 +259,52 @@ public class Client extends JPanel {
 		jtfMessage.requestFocus();
 	}
 	
+	private synchronized void showNewMessage(int messageFontStyle, Color messageColor, String message, boolean pm) {
+		Calendar messageTime = new GregorianCalendar();
+		String time = String.format("[%02d:%02d:%02d]", messageTime.get(Calendar.HOUR_OF_DAY), messageTime.get(Calendar.MINUTE), messageTime.get(Calendar.SECOND));
+		try {
+			Color privateMessageColor = new Color(217, 217, 217);
+			SimpleAttributeSet aset = new SimpleAttributeSet();
+			if(pm) {
+				StyleConstants.setBackground(aset, privateMessageColor);
+			}							
+
+			StyleConstants.setForeground(aset, Color.GRAY);
+			StyleConstants.setBold(aset, true);	
+			StyleConstants.setItalic(aset, false);
+			doc.insertString(doc.getLength(), time, aset);
+			
+			aset = new SimpleAttributeSet();
+			if(pm) {
+				StyleConstants.setBackground(aset, privateMessageColor);
+			}	
+			StyleConstants.setForeground(aset, messageColor);
+			if(messageFontStyle == Font.PLAIN) {
+				StyleConstants.setBold(aset, false);	
+				StyleConstants.setItalic(aset, false);							
+			} else if(messageFontStyle == Font.BOLD) {
+				StyleConstants.setBold(aset, true);	
+				StyleConstants.setItalic(aset, false);
+			} else if(messageFontStyle == Font.ITALIC) {
+				StyleConstants.setBold(aset, false);	
+				StyleConstants.setItalic(aset, true);		
+			} else if(messageFontStyle == Font.BOLD + Font.ITALIC) {
+				StyleConstants.setBold(aset, true);	
+				StyleConstants.setItalic(aset, true);		
+			}
+
+			doc.insertString(doc.getLength(), message + " \n", aset);
+			//limit lines count in chat
+			String text = doc.getText(0, doc.getLength()); 
+			if(text.split("\n").length > 200) {
+				doc.remove(0, text.indexOf("\n") + 1);
+			}
+			
+			jtpChat.setCaretPosition(doc.getLength());
+			
+		} catch (BadLocationException e2) {}
+	}
+	
 	// receive messages and users list in UDP-mode
 	class ReceiveMessageUDP implements Runnable {
 		public ReceiveMessageUDP() {
@@ -273,7 +320,7 @@ public class Client extends JPanel {
 			    DatagramPacket dp = new DatagramPacket(buf, buf.length);  
 			    try {
 					Client.this.serverSocket.receive(dp);
-
+					
 					String[] messageData;
 					try {
 						messageData = new String(dp.getData(), 0, dp.getLength(), StandardCharsets.UTF_8.name()).split("\n");
@@ -281,49 +328,11 @@ public class Client extends JPanel {
 						messageData = new String(dp.getData(), 0, dp.getLength()).split("\n");
 					}
 					
-					Calendar messageTime = new GregorianCalendar();
-					String time = String.format("[%02d:%02d:%02d]", messageTime.get(Calendar.HOUR_OF_DAY), messageTime.get(Calendar.MINUTE), messageTime.get(Calendar.SECOND));
-					
 					int messageFontStyle = Integer.parseInt(messageData[0]);
 					Color messageColor = new Color(Integer.parseInt(messageData[1]));
 					String message = messageData[2];
 					
-					try {
-						
-						SimpleAttributeSet aset = new SimpleAttributeSet();
-					
-						StyleConstants.setForeground(aset, Color.GRAY);
-						StyleConstants.setBold(aset, true);	
-						StyleConstants.setItalic(aset, false);
-						doc.insertString(doc.getLength(), time, aset);
-						
-						aset = new SimpleAttributeSet();
-					
-						StyleConstants.setForeground(aset, messageColor);
-						if(messageFontStyle == Font.PLAIN) {
-							StyleConstants.setBold(aset, false);	
-							StyleConstants.setItalic(aset, false);							
-						} else if(messageFontStyle == Font.BOLD) {
-							StyleConstants.setBold(aset, true);	
-							StyleConstants.setItalic(aset, false);
-						} else if(messageFontStyle == Font.ITALIC) {
-							StyleConstants.setBold(aset, false);	
-							StyleConstants.setItalic(aset, true);		
-						} else if(messageFontStyle == Font.BOLD + Font.ITALIC) {
-							StyleConstants.setBold(aset, true);	
-							StyleConstants.setItalic(aset, true);		
-						}
-
-						doc.insertString(doc.getLength(), message + " \n", aset);
-						//limit lines count in chat
-						String text = doc.getText(0, doc.getLength()); 
-						if(text.split("\n").length > 200) {
-							doc.remove(0, text.indexOf("\n") + 1);
-						}
-						
-						jtpChat.setCaretPosition(doc.getLength());
-						
-					} catch (BadLocationException e2) {}
+					showNewMessage(messageFontStyle, messageColor, message, false);
 					
 				} catch (IOException e1) {
 				}			    
@@ -344,54 +353,11 @@ public class Client extends JPanel {
 					String command = fromServer.nextLine();
 					if((command.equals("1")) || (command.equals("3"))) { //new message
 						
-						Calendar messageTime = new GregorianCalendar();
-						String time = String.format("[%02d:%02d:%02d]", messageTime.get(Calendar.HOUR_OF_DAY), messageTime.get(Calendar.MINUTE), messageTime.get(Calendar.SECOND));
-						
 						int messageFontStyle = Integer.parseInt(fromServer.nextLine());
 						Color messageColor = new Color(Integer.parseInt(fromServer.nextLine()));
 						String message = fromServer.nextLine();
 						
-						try {
-							Color privateMessageColor = new Color(217, 217, 217);
-							
-							SimpleAttributeSet aset = new SimpleAttributeSet();
-							if(command.equals("3")) {
-								StyleConstants.setBackground(aset, privateMessageColor);
-							}							
-							StyleConstants.setForeground(aset, Color.GRAY);
-							StyleConstants.setBold(aset, true);	
-							StyleConstants.setItalic(aset, false);
-							doc.insertString(doc.getLength(), time, aset);
-							
-							aset = new SimpleAttributeSet();
-							if(command.equals("3")) {
-								StyleConstants.setBackground(aset, privateMessageColor);
-							}							
-							StyleConstants.setForeground(aset, messageColor);
-							if(messageFontStyle == Font.PLAIN) {
-								StyleConstants.setBold(aset, false);	
-								StyleConstants.setItalic(aset, false);							
-							} else if(messageFontStyle == Font.BOLD) {
-								StyleConstants.setBold(aset, true);	
-								StyleConstants.setItalic(aset, false);
-							} else if(messageFontStyle == Font.ITALIC) {
-								StyleConstants.setBold(aset, false);	
-								StyleConstants.setItalic(aset, true);		
-							} else if(messageFontStyle == Font.BOLD + Font.ITALIC) {
-								StyleConstants.setBold(aset, true);	
-								StyleConstants.setItalic(aset, true);		
-							}
-
-							doc.insertString(doc.getLength(), message + " \n", aset);
-							//limit lines count in chat
-							String text = doc.getText(0, doc.getLength()); 
-							if(text.split("\n").length > 200) {
-								doc.remove(0, text.indexOf("\n") + 1);
-							}
-							
-							jtpChat.setCaretPosition(doc.getLength());
-							
-						} catch (BadLocationException e) {}
+						showNewMessage(messageFontStyle, messageColor, message, command.equals("3") ? true: false);
 					
 					} else if(command.equals("2")) { //list of clients
 						int usersCount = Integer.parseInt(fromServer.nextLine());
