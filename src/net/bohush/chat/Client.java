@@ -58,6 +58,7 @@ public class Client extends JPanel {
 	private Scanner fromServer;
 	private DatagramSocket serverSocket;
 	
+	private String checkDuplicates;
 	private boolean isNonServerMode;
 	private int port;
 	private String userName;
@@ -177,7 +178,8 @@ public class Client extends JPanel {
 
 						try {
 							InetAddress IPAddress = InetAddress.getByName("255.255.255.255");
-							String sentence = fontStyle + "\n" + colorPanel.getColor().getRGB() + "\n " + Client.this.userName + ": " + jtfMessage.getText();
+							checkDuplicates = System.currentTimeMillis() + "" + Math.random();
+							String sentence = checkDuplicates + "\n" + fontStyle + "\n" + colorPanel.getColor().getRGB() + "\n " + Client.this.userName + ": " + jtfMessage.getText();
 							byte[] sendData = sentence.getBytes(StandardCharsets.UTF_8.name());
 							DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Client.this.port);
 							Client.this.serverSocket.send(sendPacket);
@@ -328,12 +330,12 @@ public class Client extends JPanel {
 						messageData = new String(dp.getData(), 0, dp.getLength()).split("\n");
 					}
 					
-					int messageFontStyle = Integer.parseInt(messageData[0]);
-					Color messageColor = new Color(Integer.parseInt(messageData[1]));
-					String message = messageData[2];
-					
-					showNewMessage(messageFontStyle, messageColor, message, false);
-					
+					if(!checkDuplicates.equals(messageData[0])) {
+						int messageFontStyle = Integer.parseInt(messageData[1]);
+						Color messageColor = new Color(Integer.parseInt(messageData[2]));
+						String message = messageData[3];
+						showNewMessage(messageFontStyle, messageColor, message, false);
+					}
 				} catch (IOException e1) {
 				}			    
 			}
@@ -384,7 +386,7 @@ public class Client extends JPanel {
 							}
 						}
 						
-						jlUsers.setData(users, ips);						
+						jlUsers.setData(userName, users, ips);						
 					} else if(command.equals("4")) { //disconnect
 						fromServer.close();
 						toServer.close();

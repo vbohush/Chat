@@ -28,7 +28,7 @@ public class UserList extends JPanel{
 		add(panel, BorderLayout.NORTH);
 	}
 	
-	public void setData(String[] stringUsers, String[] ips) {
+	public void setData(String userName, String[] stringUsers, String[] ips) {
 		panel.removeAll();
 		panel.setLayout(new GridLayout(stringUsers.length, 1, 5, 5));
 
@@ -39,15 +39,17 @@ public class UserList extends JPanel{
 			JLabel userNameLabel = new JLabel(stringUsers[i]);
 			userNameLabel.setFont(userNameLabel.getFont().deriveFont(Font.BOLD));
 			oneUserPanel.add(userNameLabel, BorderLayout.WEST);
-			if(isAdmin) {
-				JPanel userButtonsPanel = new JPanel(new GridLayout(1, 2, 2, 0));
-				userButtonsPanel.add(new BanButton(stringUsers[i], ips[i], clientPanel));
-				userButtonsPanel.add(new PmJButton(stringUsers[i], clientPanel));
-				oneUserPanel.add(userButtonsPanel, BorderLayout.EAST);
-			} else {
-				oneUserPanel.add(new PmJButton(stringUsers[i], clientPanel), BorderLayout.EAST);
+			if(!userName.equals(stringUsers[i])){
+				if(isAdmin) {
+					JPanel userButtonsPanel = new JPanel(new GridLayout(1, 2, 2, 0));
+					userButtonsPanel.setBackground(Color.WHITE);
+					userButtonsPanel.add(new BanButton(stringUsers[i], ips[i], clientPanel));
+					userButtonsPanel.add(new PmJButton(stringUsers[i], clientPanel));
+					oneUserPanel.add(userButtonsPanel, BorderLayout.EAST);
+				} else {
+					oneUserPanel.add(new PmJButton(stringUsers[i], clientPanel), BorderLayout.EAST);
+				}		
 			}
-			
 			oneUserPanel.setBackground(Color.WHITE);
 			panel.add(oneUserPanel);
 		}
