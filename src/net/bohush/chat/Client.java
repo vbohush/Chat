@@ -179,8 +179,8 @@ public class Client extends JPanel {
 						try {
 							InetAddress IPAddress = InetAddress.getByName("255.255.255.255");
 							checkDuplicates = System.currentTimeMillis() + "" + Math.random();
-							String sentence = checkDuplicates + "\n" + fontStyle + "\n" + colorPanel.getColor().getRGB() + "\n " + Client.this.userName + ": " + jtfMessage.getText();
-							byte[] sendData = sentence.getBytes(StandardCharsets.UTF_8.name());
+							String sendDataString = checkDuplicates + "\n" + fontStyle + "\n" + colorPanel.getColor().getRGB() + "\n " + Client.this.userName + ": " + jtfMessage.getText();
+							byte[] sendData = sendDataString.getBytes(StandardCharsets.UTF_8.name());
 							DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Client.this.port);
 							Client.this.serverSocket.send(sendPacket);
 							showNewMessage(fontStyle, colorPanel.getColor(), " " + Client.this.userName + ": " + jtfMessage.getText(), false);
