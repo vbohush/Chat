@@ -1,6 +1,8 @@
 Chat for a local network
 ========
 
+Download binary **.jar**: http://bohush.net/chat.jar
+
 Goal: implement simple chat server and client.
 
 Requirements:
@@ -32,4 +34,3 @@ Optional features:
 
 "Optional features" section gives additional points, more is better.
 
-Download binary .jar: http://bohush.net/chat.jar
